@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { env } from 'src/config';
+import { env } from '../config';
 import { DataSource } from 'typeorm';
 
 const dataSource = new DataSource({
