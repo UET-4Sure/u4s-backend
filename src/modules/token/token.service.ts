@@ -1,7 +1,9 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
+import { GetManyResponse, paginateData } from '../../common/dtos';
 import { CreateTokenDto } from './dto/create-token.dto';
+import { GetTokensDto } from './dto/get-tokens.dto';
 import { Token } from './entities/token.entity';
 
 @Injectable()
@@ -23,5 +25,30 @@ export class TokenService {
 
     const token = this.tokenRepository.create(createTokenDto);
     return this.tokenRepository.save(token);
+  }
+
+  async findAll(query: GetTokensDto): Promise<GetManyResponse<Token>> {
+    const { page = 1, limit = 10, symbol, name, address } = query;
+    const offset = (page - 1) * limit;
+
+    const where: any = {};
+    if (symbol) where.symbol = Like(`%${symbol}%`);
+    if (name) where.name = Like(`%${name}%`);
+    if (address) where.address = Like(`%${address}%`);
+
+    const [tokens, _] = await this.tokenRepository.findAndCount({
+      where,
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    const paginatedData = paginateData(tokens, { limit, offset });
+
+    return {
+      data: paginatedData.data,
+      total: paginatedData.total,
+      count: paginatedData.count,
+    };
   }
 }
