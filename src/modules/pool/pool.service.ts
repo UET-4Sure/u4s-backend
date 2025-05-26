@@ -5,8 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GetManyResponse, paginateData } from '../../common/dtos';
 import { Token } from '../token/entities/token.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
+import { GetPoolsDto } from './dto/get-pools.dto';
 import { Pool } from './entities/pool.entity';
 
 @Injectable()
@@ -67,5 +69,48 @@ export class PoolService {
     });
 
     return this.poolRepository.save(pool);
+  }
+
+  async findAll(query: GetPoolsDto): Promise<GetManyResponse<Pool>> {
+    const {
+      page = 1,
+      limit = 10,
+      token0Address,
+      token1Address,
+      feeTier,
+      initialized,
+    } = query;
+    const offset = (page - 1) * limit;
+
+    const qb = this.poolRepository
+      .createQueryBuilder('pool')
+      .leftJoinAndSelect('pool.token0', 'token0')
+      .leftJoinAndSelect('pool.token1', 'token1')
+      .orderBy('pool.createdAt', 'DESC');
+
+    if (token0Address) {
+      qb.andWhere('token0.address = :token0Address', { token0Address });
+    }
+
+    if (token1Address) {
+      qb.andWhere('token1.address = :token1Address', { token1Address });
+    }
+
+    if (feeTier !== undefined) {
+      qb.andWhere('pool.feeTier = :feeTier', { feeTier });
+    }
+
+    if (initialized !== undefined) {
+      qb.andWhere('pool.initialized = :initialized', { initialized });
+    }
+
+    const [pools, total] = await qb.getManyAndCount();
+    const paginatedData = paginateData(pools, { limit, offset });
+
+    return {
+      data: paginatedData.data,
+      total: paginatedData.total,
+      count: paginatedData.count,
+    };
   }
 }

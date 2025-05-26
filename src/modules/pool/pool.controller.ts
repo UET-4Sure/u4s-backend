@@ -1,6 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetManyResponse } from '../../common/dtos';
 import { CreatePoolDto } from './dto/create-pool.dto';
+import { GetPoolsDto } from './dto/get-pools.dto';
 import { Pool } from './entities/pool.entity';
 import { PoolService } from './pool.service';
 
@@ -18,7 +20,7 @@ export class PoolController {
   })
   @ApiResponse({
     status: 409,
-    description: 'Pool with this address already exists',
+    description: 'Pool with these tokens and fee tier already exists',
   })
   @ApiResponse({
     status: 404,
@@ -26,5 +28,16 @@ export class PoolController {
   })
   create(@Body() createPoolDto: CreatePoolDto): Promise<Pool> {
     return this.poolService.create(createPoolDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List all pools with pagination and filtering' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated pools with total count',
+    type: GetManyResponse<Pool>,
+  })
+  findAll(@Query() query: GetPoolsDto): Promise<GetManyResponse<Pool>> {
+    return this.poolService.findAll(query);
   }
 }
