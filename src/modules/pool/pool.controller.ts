@@ -1,8 +1,17 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
+import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
 import { PoolService } from './pool.service';
 
@@ -54,5 +63,23 @@ export class PoolController {
   })
   findOne(@Param('id') id: string): Promise<Pool> {
     return this.poolService.findOne(id);
+  }
+
+  @Patch(':id/initialize')
+  @ApiOperation({ summary: 'Mark a pool as initialized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Pool initialization status updated successfully',
+    type: Pool,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  initialize(
+    @Param('id') id: string,
+    @Body() initializePoolDto: InitializePoolDto,
+  ): Promise<Pool> {
+    return this.poolService.initialize(id, initializePoolDto);
   }
 }

@@ -9,6 +9,7 @@ import { GetManyResponse, paginateData } from '../../common/dtos';
 import { Token } from '../token/entities/token.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
+import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
 
 @Injectable()
@@ -46,8 +47,8 @@ export class PoolService {
     // Check if pool with these tokens and fee tier already exists
     const existingPool = await this.poolRepository.findOne({
       where: {
-        token0: { id: token0.id },
-        token1: { id: token1.id },
+        token0: { address: token0.address },
+        token1: { address: token1.address },
         feeTier: createPoolDto.feeTier,
       },
     });
@@ -117,7 +118,14 @@ export class PoolService {
   async findOne(id: string): Promise<Pool> {
     const pool = await this.poolRepository.findOne({
       where: { id },
-      relations: ['token0', 'token1', 'ticks', 'positions', 'swaps', 'flashCallbacks'],
+      relations: [
+        'token0',
+        'token1',
+        'ticks',
+        'positions',
+        'swaps',
+        'flashCallbacks',
+      ],
     });
 
     if (!pool) {
@@ -125,5 +133,23 @@ export class PoolService {
     }
 
     return pool;
+  }
+
+  async initialize(
+    id: string,
+    initializePoolDto: InitializePoolDto,
+  ): Promise<Pool> {
+    const pool = await this.poolRepository.findOne({
+      where: { id },
+      relations: ['token0', 'token1'],
+    });
+
+    if (!pool) {
+      throw new NotFoundException(`Pool with ID ${id} not found`);
+    }
+
+    // Update pool initialization status
+    pool.initialized = initializePoolDto.initialized;
+    return this.poolRepository.save(pool);
   }
 }
