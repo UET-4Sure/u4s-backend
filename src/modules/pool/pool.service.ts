@@ -113,4 +113,17 @@ export class PoolService {
       count: paginatedData.count,
     };
   }
+
+  async findOne(id: string): Promise<Pool> {
+    const pool = await this.poolRepository.findOne({
+      where: { id },
+      relations: ['token0', 'token1', 'ticks', 'positions', 'swaps', 'flashCallbacks'],
+    });
+
+    if (!pool) {
+      throw new NotFoundException(`Pool with ID ${id} not found`);
+    }
+
+    return pool;
+  }
 }

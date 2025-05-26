@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreatePoolDto } from './dto/create-pool.dto';
@@ -39,5 +39,20 @@ export class PoolController {
   })
   findAll(@Query() query: GetPoolsDto): Promise<GetManyResponse<Pool>> {
     return this.poolService.findAll(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get pool details by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return pool details with all related data',
+    type: Pool,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  findOne(@Param('id') id: string): Promise<Pool> {
+    return this.poolService.findOne(id);
   }
 }
