@@ -1,9 +1,14 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { GetTokensDto } from './dto/get-tokens.dto';
+import { UpdateTokenDto } from './dto/update-token.dto';
 import { Token } from './entities/token.entity';
 
 @Injectable()
@@ -50,5 +55,19 @@ export class TokenService {
       total: paginatedData.total,
       count: paginatedData.count,
     };
+  }
+
+  async update(id: string, updateTokenDto: UpdateTokenDto): Promise<Token> {
+    const token = await this.tokenRepository.findOne({
+      where: { id },
+    });
+
+    if (!token) {
+      throw new NotFoundException(`Token with ID ${id} not found`);
+    }
+
+    // Update only the provided fields
+    Object.assign(token, updateTokenDto);
+    return this.tokenRepository.save(token);
   }
 }

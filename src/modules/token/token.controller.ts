@@ -1,8 +1,17 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { GetTokensDto } from './dto/get-tokens.dto';
+import { UpdateTokenDto } from './dto/update-token.dto';
 import { Token } from './entities/token.entity';
 import { TokenService } from './token.service';
 
@@ -35,5 +44,23 @@ export class TokenController {
   })
   findAll(@Query() query: GetTokensDto): Promise<GetManyResponse<Token>> {
     return this.tokenService.findAll(query);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Token updated successfully',
+    type: Token,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Token not found',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateTokenDto: UpdateTokenDto,
+  ): Promise<Token> {
+    return this.tokenService.update(id, updateTokenDto);
   }
 }
