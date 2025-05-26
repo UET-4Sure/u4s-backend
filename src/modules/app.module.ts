@@ -4,13 +4,15 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import dataSource from 'src/libs/typeORM.config';
 import { TokenModule } from './token/token.module';
+import { PoolModule } from './pool/pool.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     TypeOrmModule.forRoot(dataSource.options),
-    TokenModule
+    TokenModule,
+    PoolModule,
   ],
 })
 export class AppModule {}
