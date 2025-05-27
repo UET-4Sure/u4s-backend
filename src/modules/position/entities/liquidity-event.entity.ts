@@ -8,6 +8,11 @@ import {
 } from 'typeorm';
 import { Position } from './position.entity';
 
+export enum LiquidityEventType {
+  MINT = 'MINT',
+  BURN = 'BURN',
+}
+
 @Entity('liquidity_events')
 export class LiquidityEvent {
   @PrimaryGeneratedColumn('uuid')
@@ -19,11 +24,19 @@ export class LiquidityEvent {
   @JoinColumn({ name: 'position_id' })
   position: Position;
 
-  @Column({ type: 'enum', enum: ['mint', 'burn'], name: 'event_type' })
-  eventType: 'mint' | 'burn';
+  @Column({
+    type: 'enum',
+    enum: LiquidityEventType,
+    name: 'type',
+  })
+  type: LiquidityEventType;
 
-  @Column('numeric', { precision: 38, scale: 18 })
-  amount: string;
+  @Column('numeric', {
+    precision: 38,
+    scale: 18,
+    name: 'liquidity_amount',
+  })
+  liquidityAmount: string;
 
   @Column('numeric', { precision: 38, scale: 18, name: 'amount0' })
   amount0: string;
@@ -34,6 +47,6 @@ export class LiquidityEvent {
   @Column({ type: 'varchar', length: 66, name: 'tx_hash' })
   txHash: string;
 
-  @CreateDateColumn({ name: 'timestamp' })
-  timestamp: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

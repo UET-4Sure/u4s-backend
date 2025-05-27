@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import dataSource from 'src/libs/typeORM.config';
 import { TokenModule } from './token/token.module';
 import { PoolModule } from './pool/pool.module';
+import { PositionModule } from './position/position.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PoolModule } from './pool/pool.module';
     TypeOrmModule.forRoot(dataSource.options),
     TokenModule,
     PoolModule,
+    PositionModule,
   ],
 })
 export class AppModule {}
