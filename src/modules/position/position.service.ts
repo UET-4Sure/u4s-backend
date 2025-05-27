@@ -75,4 +75,17 @@ export class PositionService {
       count: paginatedData.count,
     };
   }
+
+  async findOne(id: string): Promise<Position> {
+    const position = await this.positionRepository.findOne({
+      where: { id },
+      relations: ['pool', 'pool.token0', 'pool.token1', 'liquidityEvents'],
+    });
+
+    if (!position) {
+      throw new NotFoundException(`Position with ID ${id} not found`);
+    }
+
+    return position;
+  }
 }

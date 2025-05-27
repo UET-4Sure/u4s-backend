@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreatePositionDto } from './dto/create-position.dto';
@@ -39,5 +39,20 @@ export class PositionController {
   })
   findAll(@Query() query: GetPositionsDto): Promise<GetManyResponse<Position>> {
     return this.positionService.findAll(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get position details by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return position details with all related data',
+    type: Position,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Position not found',
+  })
+  findOne(@Param('id') id: string): Promise<Position> {
+    return this.positionService.findOne(id);
   }
 }
