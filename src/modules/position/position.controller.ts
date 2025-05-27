@@ -10,7 +10,9 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreatePositionDto } from './dto/create-position.dto';
+import { GetPositionEventsDto } from './dto/get-position-events.dto';
 import { GetPositionsDto } from './dto/get-positions.dto';
+import { LiquidityEvent } from './entities/liquidity-event.entity';
 import { Position } from './entities/position.entity';
 import { PositionService } from './position.service';
 
@@ -80,5 +82,23 @@ export class PositionController {
   })
   remove(@Param('id') id: string): Promise<void> {
     return this.positionService.remove(id);
+  }
+
+  @Get(':id/events')
+  @ApiOperation({ summary: 'List mint/burn events for a given position' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated liquidity events with total count',
+    type: GetManyResponse<LiquidityEvent>,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Position not found',
+  })
+  findEvents(
+    @Param('id') id: string,
+    @Query() query: GetPositionEventsDto,
+  ): Promise<GetManyResponse<LiquidityEvent>> {
+    return this.positionService.findEvents(id, query);
   }
 }

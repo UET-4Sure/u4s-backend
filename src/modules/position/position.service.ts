@@ -4,7 +4,9 @@ import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
 import { Pool } from '../pool/entities/pool.entity';
 import { CreatePositionDto } from './dto/create-position.dto';
+import { GetPositionEventsDto } from './dto/get-position-events.dto';
 import { GetPositionsDto } from './dto/get-positions.dto';
+import { LiquidityEvent } from './entities/liquidity-event.entity';
 import { Position } from './entities/position.entity';
 
 @Injectable()
@@ -14,6 +16,8 @@ export class PositionService {
     private positionRepository: Repository<Position>,
     @InjectRepository(Pool)
     private poolRepository: Repository<Pool>,
+    @InjectRepository(LiquidityEvent)
+    private liquidityEventRepository: Repository<LiquidityEvent>,
   ) {}
 
   async create(createPositionDto: CreatePositionDto): Promise<Position> {
@@ -106,5 +110,41 @@ export class PositionService {
 
     // Delete the position
     await this.positionRepository.remove(position);
+  }
+
+  async findEvents(
+    id: string,
+    query: GetPositionEventsDto,
+  ): Promise<GetManyResponse<LiquidityEvent>> {
+    // Check if position exists
+    const position = await this.positionRepository.findOne({
+      where: { id },
+    });
+
+    if (!position) {
+      throw new NotFoundException(`Position with ID ${id} not found`);
+    }
+
+    const { page = 1, limit = 10, type } = query;
+    const offset = (page - 1) * limit;
+
+    const qb = this.liquidityEventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.position', 'position')
+      .where('position.id = :positionId', { positionId: id })
+      .orderBy('event.createdAt', 'DESC');
+
+    if (type) {
+      qb.andWhere('event.type = :type', { type });
+    }
+
+    const [events, total] = await qb.getManyAndCount();
+    const paginatedData = paginateData(events, { limit, offset });
+
+    return {
+      data: paginatedData.data,
+      total: paginatedData.total,
+      count: paginatedData.count,
+    };
   }
 }
