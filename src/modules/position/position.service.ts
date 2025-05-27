@@ -88,4 +88,23 @@ export class PositionService {
 
     return position;
   }
+
+  async remove(id: string): Promise<void> {
+    const position = await this.positionRepository.findOne({
+      where: { id },
+      relations: ['liquidityEvents'],
+    });
+
+    if (!position) {
+      throw new NotFoundException(`Position with ID ${id} not found`);
+    }
+
+    // Check if position has any liquidity events
+    if (position.liquidityEvents && position.liquidityEvents.length > 0) {
+      throw new Error('Cannot burn position with existing liquidity events');
+    }
+
+    // Delete the position
+    await this.positionRepository.remove(position);
+  }
 }

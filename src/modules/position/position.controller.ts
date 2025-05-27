@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreatePositionDto } from './dto/create-position.dto';
@@ -54,5 +62,23 @@ export class PositionController {
   })
   findOne(@Param('id') id: string): Promise<Position> {
     return this.positionService.findOne(id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Burn (close) a position' })
+  @ApiResponse({
+    status: 200,
+    description: 'Position burned successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Position not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot burn position with existing liquidity events',
+  })
+  remove(@Param('id') id: string): Promise<void> {
+    return this.positionService.remove(id);
   }
 }
