@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GetManyResponse, paginateData } from '../../common/dtos';
 import { Pool } from '../pool/entities/pool.entity';
 import { CreatePositionDto } from './dto/create-position.dto';
+import { GetPositionsDto } from './dto/get-positions.dto';
 import { Position } from './entities/position.entity';
 
 @Injectable()
@@ -43,5 +45,34 @@ export class PositionService {
     });
 
     return this.positionRepository.save(position);
+  }
+
+  async findAll(query: GetPositionsDto): Promise<GetManyResponse<Position>> {
+    const { page = 1, limit = 10, ownerAddress, poolId } = query;
+    const offset = (page - 1) * limit;
+
+    const qb = this.positionRepository
+      .createQueryBuilder('position')
+      .leftJoinAndSelect('position.pool', 'pool')
+      .leftJoinAndSelect('pool.token0', 'token0')
+      .leftJoinAndSelect('pool.token1', 'token1')
+      .orderBy('position.createdAt', 'DESC');
+
+    if (ownerAddress) {
+      qb.andWhere('position.ownerAddress = :ownerAddress', { ownerAddress });
+    }
+
+    if (poolId) {
+      qb.andWhere('pool.id = :poolId', { poolId });
+    }
+
+    const [positions, total] = await qb.getManyAndCount();
+    const paginatedData = paginateData(positions, { limit, offset });
+
+    return {
+      data: paginatedData.data,
+      total: paginatedData.total,
+      count: paginatedData.count,
+    };
   }
 }
