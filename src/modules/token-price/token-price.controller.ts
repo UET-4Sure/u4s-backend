@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { GetTokenPriceHistoryDto } from './dto/get-token-price-history.dto';
+import { UpsertTokenPriceDto } from './dto/upsert-token-price.dto';
 import { TokenPrice } from './entities/token-price.entity';
 import { TokenPriceService } from './token-price.service';
 
@@ -41,5 +42,23 @@ export class TokenPriceController {
     @Query() query: GetTokenPriceHistoryDto,
   ): Promise<GetManyResponse<TokenPrice>> {
     return this.tokenPriceService.findHistory(tokenId, query);
+  }
+
+  @Post(':tokenId')
+  @ApiOperation({ summary: 'Upsert a new price for a token' })
+  @ApiResponse({
+    status: 201,
+    description: 'Price upserted successfully',
+    type: TokenPrice,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Token not found',
+  })
+  upsert(
+    @Param('tokenId') tokenId: string,
+    @Body() upsertTokenPriceDto: UpsertTokenPriceDto,
+  ): Promise<TokenPrice> {
+    return this.tokenPriceService.upsert(tokenId, upsertTokenPriceDto);
   }
 }

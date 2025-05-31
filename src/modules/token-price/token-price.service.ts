@@ -7,6 +7,7 @@ import {
   GetTokenPriceHistoryDto,
   PriceInterval,
 } from './dto/get-token-price-history.dto';
+import { UpsertTokenPriceDto } from './dto/upsert-token-price.dto';
 import { TokenPrice } from './entities/token-price.entity';
 
 @Injectable()
@@ -86,5 +87,28 @@ export class TokenPriceService {
       total,
       count: prices.length,
     };
+  }
+
+  async upsert(
+    tokenId: string,
+    upsertTokenPriceDto: UpsertTokenPriceDto,
+  ): Promise<TokenPrice> {
+    // Check if token exists
+    const token = await this.tokenRepository.findOne({
+      where: { id: tokenId },
+    });
+
+    if (!token) {
+      throw new NotFoundException(`Token with ID ${tokenId} not found`);
+    }
+
+    // Create new price record
+    const price = this.tokenPriceRepository.create({
+      token,
+      priceUsd: upsertTokenPriceDto.priceUsd,
+      timestamp: new Date(),
+    });
+
+    return this.tokenPriceRepository.save(price);
   }
 }
