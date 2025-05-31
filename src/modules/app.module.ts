@@ -6,6 +6,7 @@ import dataSource from 'src/libs/typeORM.config';
 import { TokenModule } from './token/token.module';
 import { PoolModule } from './pool/pool.module';
 import { PositionModule } from './position/position.module';
+import { SwapModule } from './swap/swap.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PositionModule } from './position/position.module';
     TokenModule,
     PoolModule,
     PositionModule,
+    SwapModule,
   ],
 })
 export class AppModule {}
