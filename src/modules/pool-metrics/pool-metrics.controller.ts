@@ -1,6 +1,9 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetManyResponse } from '../../common/dtos';
+import { GetPoolVolumeMetricsDto } from './dto/get-pool-volume-metrics.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
+import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
 import { PoolMetricsService } from './pool-metrics.service';
 
 @ApiTags('pool-metrics')
@@ -23,5 +26,23 @@ export class PoolMetricsController {
     @Param('poolId') poolId: string,
   ): Promise<PoolMetricsOverviewDto> {
     return this.poolMetricsService.getOverview(poolId);
+  }
+
+  @Get(':poolId/metrics/volume')
+  @ApiOperation({ summary: 'Get pool volume metrics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated volume metrics',
+    type: GetManyResponse<PoolVolumeMetricDto>,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  getVolumeMetrics(
+    @Param('poolId') poolId: string,
+    @Query() query: GetPoolVolumeMetricsDto,
+  ): Promise<GetManyResponse<PoolVolumeMetricDto>> {
+    return this.poolMetricsService.getVolumeMetrics(poolId, query);
   }
 }

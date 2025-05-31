@@ -1,8 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GetManyResponse } from '../../common/dtos';
 import { Pool } from '../pool/entities/pool.entity';
+import {
+  GetPoolVolumeMetricsDto,
+  TimeInterval,
+} from './dto/get-pool-volume-metrics.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
+import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
 import { PoolMetrics } from './entities/pool-metric.entity';
 
 @Injectable()
@@ -41,5 +47,77 @@ export class PoolMetricsService {
       aprForLps: latestMetrics.aprForLps,
       lastUpdated: latestMetrics.bucketStart,
     };
+  }
+
+  async getVolumeMetrics(
+    poolId: string,
+    query: GetPoolVolumeMetricsDto,
+  ): Promise<GetManyResponse<PoolVolumeMetricDto>> {
+    // 1) Check if pool exists
+    const pool = await this.poolRepository.findOne({
+      where: { id: poolId },
+    });
+    if (!pool) {
+      throw new NotFoundException(`Pool with ID ${poolId} not found`);
+    }
+
+    // 2) Default to DAY / 24 if not provided
+    const interval = query.interval ?? TimeInterval.DAY;
+    const limit = query.limit ?? 24;
+
+    // 3) Build the raw‐SQL aggregation using date_trunc on the actual column name 'bucket_start'
+    const qb = this.poolMetricsRepository
+      .createQueryBuilder('metrics')
+      .select([
+        `date_trunc('${interval}', metrics.bucket_start)     AS "bucketStart"`,
+        `SUM(metrics.volume24hUsd)    ::TEXT                  AS "volume24hUsd"`,
+        `SUM(metrics.fees24hUsd)      ::TEXT                  AS "fees24hUsd"`,
+        `MAX(metrics.tvlUsd)          ::TEXT                  AS "tvlUsd"`,
+      ])
+      .where('metrics.pool_id = :poolId', { poolId })
+      .andWhere(`metrics.bucket_start <= date_trunc('${interval}', now())`)
+      .andWhere(
+        `metrics.bucket_start >  date_trunc('${interval}', now()) - INTERVAL '${this.getIntervalValue(interval)}'`,
+      )
+      .groupBy(`date_trunc('${interval}', metrics.bucket_start)`)
+      .orderBy(`date_trunc('${interval}', metrics.bucket_start)`, 'ASC')
+      .limit(limit);
+
+    // Get raw results and count separately
+    const [rawRows, total] = await Promise.all([
+      qb.getRawMany(),
+      qb.getCount(),
+    ]);
+
+    // 8) Map raw rows into your DTO shape
+    const data: PoolVolumeMetricDto[] = rawRows.map((row) => ({
+      bucketStart: new Date(row.bucketStart),
+      volume24hUsd: row.volume24hUsd,
+      fees24hUsd: row.fees24hUsd,
+      tvlUsd: row.tvlUsd,
+    }));
+
+    return {
+      data,
+      total,
+      count: data.length,
+    };
+  }
+
+  private getIntervalValue(interval: TimeInterval): string {
+    switch (interval) {
+      case TimeInterval.HOUR:
+        return '1 hour';
+      case TimeInterval.DAY:
+        return '1 day';
+      case TimeInterval.WEEK:
+        return '1 week';
+      case TimeInterval.MONTH:
+        return '1 month';
+      case TimeInterval.YEAR:
+        return '1 year';
+      default:
+        return '1 day';
+    }
   }
 }
