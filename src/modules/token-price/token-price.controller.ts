@@ -1,5 +1,7 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetManyResponse } from '../../common/dtos';
+import { GetTokenPriceHistoryDto } from './dto/get-token-price-history.dto';
 import { TokenPrice } from './entities/token-price.entity';
 import { TokenPriceService } from './token-price.service';
 
@@ -21,5 +23,23 @@ export class TokenPriceController {
   })
   findLatest(@Param('tokenId') tokenId: string): Promise<TokenPrice> {
     return this.tokenPriceService.findLatest(tokenId);
+  }
+
+  @Get(':tokenId/history')
+  @ApiOperation({ summary: 'Get price history for a token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated price history',
+    type: GetManyResponse<TokenPrice>,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Token not found',
+  })
+  findHistory(
+    @Param('tokenId') tokenId: string,
+    @Query() query: GetTokenPriceHistoryDto,
+  ): Promise<GetManyResponse<TokenPrice>> {
+    return this.tokenPriceService.findHistory(tokenId, query);
   }
 }
