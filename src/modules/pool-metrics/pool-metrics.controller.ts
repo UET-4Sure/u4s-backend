@@ -5,6 +5,7 @@ import { GetPoolVolumeMetricsDto } from './dto/get-pool-volume-metrics.dto';
 import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
 import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
+import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
 import { PoolMetricsService } from './pool-metrics.service';
 
 @ApiTags('pool-metrics')
@@ -63,5 +64,18 @@ export class PoolMetricsController {
     @Query() query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolFeesMetricDto>> {
     return this.poolMetricsService.getFeesMetrics(poolId, query);
+  }
+
+  @Get('metrics/pools/total-tvl')
+  @ApiOperation({ summary: 'Get total TVL across all pools' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return total TVL at the specified timestamp',
+    type: TotalTvlMetricDto,
+  })
+  getTotalTvl(
+    @Query('timestamp') timestamp?: string,
+  ): Promise<TotalTvlMetricDto> {
+    return this.poolMetricsService.getTotalTvl(timestamp);
   }
 }

@@ -10,6 +10,7 @@ import {
 import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
 import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
+import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
 import { PoolMetrics } from './entities/pool-metric.entity';
 
 @Injectable()
@@ -171,5 +172,43 @@ export class PoolMetricsService {
       default:
         return '1 day';
     }
+  }
+
+  async getTotalTvl(timestamp?: string): Promise<TotalTvlMetricDto> {
+    // Parse timestamp or use current time
+    const targetTime = timestamp ? new Date(timestamp) : new Date();
+
+    // Build query to get the latest TVL for each pool before the target time
+    const qb = this.poolMetricsRepository
+      .createQueryBuilder('metrics')
+      .select([
+        `SUM(metrics.tvlUsd) ::TEXT AS "totalTvlUsd"`,
+        `MAX(metrics.bucketStart) AS "timestamp"`,
+      ])
+      .where('metrics.bucketStart <= :targetTime', { targetTime })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('MAX(m2.bucketStart)')
+          .from(PoolMetrics, 'm2')
+          .where('m2.pool_id = metrics.pool_id')
+          .andWhere('m2.bucketStart <= :targetTime', { targetTime })
+          .getQuery();
+        return 'metrics.bucketStart = ' + subQuery;
+      });
+
+    const result = await qb.getRawOne();
+
+    if (!result) {
+      return {
+        totalTvlUsd: '0',
+        timestamp: targetTime,
+      };
+    }
+
+    return {
+      totalTvlUsd: result.totalTvlUsd,
+      timestamp: new Date(result.timestamp),
+    };
   }
 }
