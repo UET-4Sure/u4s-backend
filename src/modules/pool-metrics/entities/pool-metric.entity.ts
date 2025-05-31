@@ -1,5 +1,12 @@
-import { Pool } from "src/modules/pool/entities/pool.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Pool } from 'src/modules/pool/entities/pool.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('pool_metrics')
 export class PoolMetrics {
@@ -46,12 +53,12 @@ export class PoolMetrics {
   aprForLps: string;
 
   @Column('numeric', {
-    name: 'price_usd',
+    name: 'price_ratio',
     precision: 38,
     scale: 18,
     default: '0',
   })
-  priceUsd: string;
+  priceRatio: string; // token1 / token0, e.g. "1.234567890000000000"
 
   @Column('numeric', {
     name: 'liquidity',

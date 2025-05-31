@@ -48,6 +48,8 @@ export class PoolMetricsService {
       volume24hUsd: latestMetrics.volume24hUsd,
       fees24hUsd: latestMetrics.fees24hUsd,
       aprForLps: latestMetrics.aprForLps,
+      priceRatio: latestMetrics.priceRatio,
+      liquidity: latestMetrics.liquidity,
       lastUpdated: latestMetrics.bucketStart,
     };
   }
@@ -76,6 +78,9 @@ export class PoolMetricsService {
         `SUM(metrics.volume24hUsd)    ::TEXT                  AS "volume24hUsd"`,
         `SUM(metrics.fees24hUsd)      ::TEXT                  AS "fees24hUsd"`,
         `MAX(metrics.tvlUsd)          ::TEXT                  AS "tvlUsd"`,
+        `MAX(metrics.priceRatio)      ::TEXT                  AS "priceRatio"`,
+        `MAX(metrics.liquidity)       ::TEXT                  AS "liquidity"`,
+        `MAX(metrics.aprForLps)       ::TEXT                  AS "aprForLps"`,
       ])
       .where('metrics.pool_id = :poolId', { poolId })
       .andWhere(`metrics.bucket_start <= date_trunc('${interval}', now())`)
@@ -98,6 +103,9 @@ export class PoolMetricsService {
       volume24hUsd: row.volume24hUsd,
       fees24hUsd: row.fees24hUsd,
       tvlUsd: row.tvlUsd,
+      priceRatio: row.priceRatio,
+      liquidity: row.liquidity,
+      aprForLps: row.aprForLps,
     }));
 
     return {

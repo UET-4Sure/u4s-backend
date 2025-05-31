@@ -15,19 +15,31 @@ export class PoolMetricsOverviewDto {
 
   @ApiProperty({
     description: '24-hour fees in USD',
-    example: '1500.00',
+    example: '250.00',
   })
   fees24hUsd: string;
 
   @ApiProperty({
-    description: 'APR for liquidity providers',
+    description: 'Annual Percentage Rate for Liquidity Providers',
     example: '12.5',
   })
   aprForLps: string;
 
   @ApiProperty({
-    description: 'Last updated timestamp',
-    example: '2024-03-21T12:00:00Z',
+    description: 'Token price ratio (token1/token0)',
+    example: '1.234567890000000000',
+  })
+  priceRatio: string;
+
+  @ApiProperty({
+    description: 'Pool liquidity',
+    example: '1000000.00',
+  })
+  liquidity: string;
+
+  @ApiProperty({
+    description: 'Last update timestamp',
+    example: '2024-03-21T00:00:00Z',
   })
   lastUpdated: Date;
 }
