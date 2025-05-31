@@ -1,3 +1,6 @@
+import { FlashCallback } from 'src/modules/flash/flash-callback.entity';
+import { Position } from 'src/modules/position/entities/position.entity';
+import { Swap } from 'src/modules/swap/entities/swap.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,10 +10,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { PoolMetrics } from '../../pool-metrics/entities/pool-metric.entity';
 import { Token } from '../../token/entities/token.entity';
-import { FlashCallback } from 'src/modules/flash/flash-callback.entity';
-import { Swap } from 'src/modules/swap/entities/swap.entity';
-import { Position } from 'src/modules/position/entities/position.entity';
 import { PoolTick } from './pool-tick.entity';
 
 @Entity('pools')
@@ -52,4 +53,7 @@ export class Pool {
 
   @OneToMany(() => FlashCallback, (hook) => hook.pool)
   flashCallbacks: FlashCallback[];
+
+  @OneToMany(() => PoolMetrics, (metric) => metric.pool)
+  metrics: PoolMetrics[];
 }
