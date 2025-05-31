@@ -8,6 +8,7 @@ import { PoolModule } from './pool/pool.module';
 import { PositionModule } from './position/position.module';
 import { SwapModule } from './swap/swap.module';
 import { TokenPriceModule } from './token-price/token-price.module';
+import { PoolMetricsModule } from './pool-metrics/pool-metrics.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TokenPriceModule } from './token-price/token-price.module';
     TokenModule,
     TokenPriceModule,
     PoolModule,
+    PoolMetricsModule,
     PositionModule,
     SwapModule,
   ],

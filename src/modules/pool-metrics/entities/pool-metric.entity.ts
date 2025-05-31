@@ -1,5 +1,12 @@
-import { Pool } from "src/modules/pool/entities/pool.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Pool } from 'src/modules/pool/entities/pool.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('pool_metrics')
 export class PoolMetrics {
@@ -10,21 +17,57 @@ export class PoolMetrics {
   @JoinColumn({ name: 'pool_id' })
   pool: Pool;
 
-  @Column({ type: 'timestamp' })
-  bucketStart: Date;             // e.g. “2025-05-31T21:00:00Z” for an hourly bucket
+  @Column({ name: 'bucket_start', type: 'timestamp' })
+  bucketStart: Date;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
-  tvlUsd: string;                // total value locked at bucketStart (in USD)
+  @Column('numeric', {
+    name: 'tvl_usd',
+    precision: 38,
+    scale: 18,
+    default: '0',
+  })
+  tvlUsd: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
-  volume24hUsd: string;          // 24 h rolling volume up to bucketStart (in USD)
+  @Column('numeric', {
+    name: 'volume_24h_usd',
+    precision: 38,
+    scale: 18,
+    default: '0',
+  })
+  volume24hUsd: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
-  fees24hUsd: string;            // 24 h rolling fees up to bucketStart (in USD)
+  @Column('numeric', {
+    name: 'fees_24h_usd',
+    precision: 38,
+    scale: 18,
+    default: '0',
+  })
+  fees24hUsd: string;
 
-  @Column({ type: 'numeric', precision: 10, scale: 4 })
-  aprForLps: string;             // APR % (e.g. “1.6845”)
+  @Column('numeric', {
+    name: 'apr_for_lps',
+    precision: 10,
+    scale: 4,
+    default: '0',
+  })
+  aprForLps: string;
+
+  @Column('numeric', {
+    name: 'price_ratio',
+    precision: 38,
+    scale: 18,
+    default: '0',
+  })
+  priceRatio: string; // token1 / token0, e.g. "1.234567890000000000"
+
+  @Column('numeric', {
+    name: 'liquidity',
+    precision: 38,
+    scale: 18,
+    default: '0',
+  })
+  liquidity: string;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;               // when this snapshot row was inserted
+  createdAt: Date;
 }
