@@ -11,6 +11,7 @@ import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
 import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
 import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
+import { TotalVolumeMetricDto } from './dto/total-volume-metric.dto';
 import { PoolMetrics } from './entities/pool-metric.entity';
 
 @Injectable()
@@ -209,6 +210,44 @@ export class PoolMetricsService {
     return {
       totalTvlUsd: result.totalTvlUsd,
       timestamp: new Date(result.timestamp),
+    };
+  }
+
+  async getTotalVolume24h(asOf?: string): Promise<TotalVolumeMetricDto> {
+    // Parse asOf timestamp or use current time
+    const targetTime = asOf ? new Date(asOf) : new Date();
+
+    // Build query to get the latest 24h volume for each pool at the target time
+    const qb = this.poolMetricsRepository
+      .createQueryBuilder('metrics')
+      .select([
+        `SUM(metrics.volume24hUsd) ::TEXT AS "totalVolume24hUsd"`,
+        `MAX(metrics.bucketStart) AS "asOf"`,
+      ])
+      .where('metrics.bucketStart <= :targetTime', { targetTime })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('MAX(m2.bucketStart)')
+          .from(PoolMetrics, 'm2')
+          .where('m2.pool_id = metrics.pool_id')
+          .andWhere('m2.bucketStart <= :targetTime', { targetTime })
+          .getQuery();
+        return 'metrics.bucketStart = ' + subQuery;
+      });
+
+    const result = await qb.getRawOne();
+
+    if (!result) {
+      return {
+        totalVolume24hUsd: '0',
+        asOf: targetTime,
+      };
+    }
+
+    return {
+      totalVolume24hUsd: result.totalVolume24hUsd,
+      asOf: new Date(result.asOf),
     };
   }
 }

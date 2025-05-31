@@ -6,6 +6,7 @@ import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
 import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
 import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
+import { TotalVolumeMetricDto } from './dto/total-volume-metric.dto';
 import { PoolMetricsService } from './pool-metrics.service';
 
 @ApiTags('pool-metrics')
@@ -77,5 +78,18 @@ export class PoolMetricsController {
     @Query('timestamp') timestamp?: string,
   ): Promise<TotalTvlMetricDto> {
     return this.poolMetricsService.getTotalTvl(timestamp);
+  }
+
+  @Get('metrics/pools/total-volume24h')
+  @ApiOperation({ summary: 'Get total 24h volume across all pools' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return total 24h volume at the specified timestamp',
+    type: TotalVolumeMetricDto,
+  })
+  getTotalVolume24h(
+    @Query('asOf') asOf?: string,
+  ): Promise<TotalVolumeMetricDto> {
+    return this.poolMetricsService.getTotalVolume24h(asOf);
   }
 }
