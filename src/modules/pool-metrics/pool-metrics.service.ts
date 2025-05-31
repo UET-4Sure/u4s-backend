@@ -8,6 +8,7 @@ import {
   TimeInterval,
 } from './dto/get-pool-volume-metrics.dto';
 import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
+import { PoolLiquidityMetricDto } from './dto/pool-liquidity-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
 import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
 import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
@@ -256,6 +257,57 @@ export class PoolMetricsService {
     return {
       totalVolume24hUsd: result.totalVolume24hUsd,
       asOf: new Date(result.asOf),
+    };
+  }
+
+  async getLiquidityMetrics(
+    poolId: string,
+    query: GetPoolVolumeMetricsDto,
+  ): Promise<GetManyResponse<PoolLiquidityMetricDto>> {
+    // 1) Check if pool exists
+    const pool = await this.poolRepository.findOne({
+      where: { id: poolId },
+    });
+    if (!pool) {
+      throw new NotFoundException(`Pool with ID ${poolId} not found`);
+    }
+
+    // 2) Default to DAY / 24 if not provided
+    const interval = query.interval ?? TimeInterval.DAY;
+    const limit = query.limit ?? 24;
+
+    // 3) Build the raw‐SQL aggregation
+    const qb = this.poolMetricsRepository
+      .createQueryBuilder('metrics')
+      .select([
+        `date_trunc('${interval}', metrics.bucket_start)     AS "bucketStart"`,
+        `MAX(metrics.liquidity)       ::TEXT                  AS "liquidity"`,
+      ])
+      .where('metrics.pool_id = :poolId', { poolId })
+      .andWhere(`metrics.bucket_start <= date_trunc('${interval}', now())`)
+      .andWhere(
+        `metrics.bucket_start >  date_trunc('${interval}', now()) - INTERVAL '${this.getIntervalValue(interval)}'`,
+      )
+      .groupBy(`date_trunc('${interval}', metrics.bucket_start)`)
+      .orderBy(`date_trunc('${interval}', metrics.bucket_start)`, 'ASC')
+      .limit(limit);
+
+    // Get raw results and count separately
+    const [rawRows, total] = await Promise.all([
+      qb.getRawMany(),
+      qb.getCount(),
+    ]);
+
+    // Map raw rows into DTO shape
+    const data: PoolLiquidityMetricDto[] = rawRows.map((row) => ({
+      bucketStart: new Date(row.bucketStart),
+      liquidity: row.liquidity,
+    }));
+
+    return {
+      data,
+      total,
+      count: data.length,
     };
   }
 }

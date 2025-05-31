@@ -3,6 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { GetPoolVolumeMetricsDto } from './dto/get-pool-volume-metrics.dto';
 import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
+import { PoolLiquidityMetricDto } from './dto/pool-liquidity-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
 import { PoolVolumeMetricDto } from './dto/pool-volume-metric.dto';
 import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
@@ -91,5 +92,23 @@ export class PoolMetricsController {
     @Query('asOf') asOf?: string,
   ): Promise<TotalVolumeMetricDto> {
     return this.poolMetricsService.getTotalVolume24h(asOf);
+  }
+
+  @Get(':poolId/metrics/liquidity')
+  @ApiOperation({ summary: 'Get pool liquidity metrics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated liquidity metrics',
+    type: GetManyResponse<PoolLiquidityMetricDto>,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  getLiquidityMetrics(
+    @Param('poolId') poolId: string,
+    @Query() query: GetPoolVolumeMetricsDto,
+  ): Promise<GetManyResponse<PoolLiquidityMetricDto>> {
+    return this.poolMetricsService.getLiquidityMetrics(poolId, query);
   }
 }
