@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Pool } from '../../pool/entities/pool.entity';
+import { TokenPrice } from '../../token-price/entities/token-price.entity';
 
 @Entity('tokens')
 export class Token {
@@ -32,4 +33,7 @@ export class Token {
 
   @OneToMany(() => Pool, (pool) => pool.token1)
   poolsAsToken1: Pool[];
+
+  @OneToMany(() => TokenPrice, (price) => price.token)
+  prices: TokenPrice[];
 }
