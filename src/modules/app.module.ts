@@ -9,12 +9,14 @@ import { PositionModule } from './position/position.module';
 import { SwapModule } from './swap/swap.module';
 import { TokenPriceModule } from './token-price/token-price.module';
 import { PoolMetricsModule } from './pool-metrics/pool-metrics.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     TypeOrmModule.forRoot(dataSource.options),
+    AuthModule,
     TokenModule,
     TokenPriceModule,
     PoolModule,
