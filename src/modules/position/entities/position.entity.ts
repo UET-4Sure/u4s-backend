@@ -1,4 +1,7 @@
+// src/modules/pool/entities/position.entity.ts
+
 import { Pool } from 'src/modules/pool/entities/pool.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -15,12 +18,19 @@ export class Position {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Pool, (pool) => pool.positions)
+  @ManyToOne(() => Pool, (pool) => pool.positions, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'pool_id' })
   pool: Pool;
 
   @Column({ type: 'varchar', length: 42, name: 'owner_address' })
   ownerAddress: string;
+
+  @ManyToOne(() => User, (user) => user.positions, { nullable: true })
+  @JoinColumn({ name: 'owner_address', referencedColumnName: 'walletAddress' })
+  user: User | null;
 
   @Column({ type: 'int', name: 'tick_lower' })
   tickLower: number;
