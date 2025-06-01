@@ -46,7 +46,7 @@ export class TokenController {
     return this.tokenService.findAll(query);
   }
 
-  @Patch(':id')
+  @Patch(':address')
   @ApiOperation({ summary: 'Update a token' })
   @ApiResponse({
     status: 200,
@@ -58,9 +58,9 @@ export class TokenController {
     description: 'Token not found',
   })
   update(
-    @Param('id') id: string,
+    @Param('address') address: string,
     @Body() updateTokenDto: UpdateTokenDto,
   ): Promise<Token> {
-    return this.tokenService.update(id, updateTokenDto);
+    return this.tokenService.update(address, updateTokenDto);
   }
 }

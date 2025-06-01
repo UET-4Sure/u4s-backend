@@ -57,13 +57,16 @@ export class TokenService {
     };
   }
 
-  async update(id: string, updateTokenDto: UpdateTokenDto): Promise<Token> {
+  async update(
+    address: string,
+    updateTokenDto: UpdateTokenDto,
+  ): Promise<Token> {
     const token = await this.tokenRepository.findOne({
-      where: { id },
+      where: { address },
     });
 
     if (!token) {
-      throw new NotFoundException(`Token with ID ${id} not found`);
+      throw new NotFoundException(`Token with address ${address} not found`);
     }
 
     // Update only the provided fields
