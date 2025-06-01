@@ -11,7 +11,7 @@ import { TokenPriceService } from './token-price.service';
 export class TokenPriceController {
   constructor(private readonly tokenPriceService: TokenPriceService) {}
 
-  @Get(':tokenId/latest')
+  @Get(':tokenAddress/latest')
   @ApiOperation({ summary: 'Get latest USD price for a token' })
   @ApiResponse({
     status: 200,
@@ -22,11 +22,11 @@ export class TokenPriceController {
     status: 404,
     description: 'Token or price not found',
   })
-  findLatest(@Param('tokenId') tokenId: string): Promise<TokenPrice> {
-    return this.tokenPriceService.findLatest(tokenId);
+  findLatest(@Param('tokenAddress') tokenAddress: string): Promise<TokenPrice> {
+    return this.tokenPriceService.findLatest(tokenAddress);
   }
 
-  @Get(':tokenId/history')
+  @Get(':tokenAddress/history')
   @ApiOperation({ summary: 'Get price history for a token' })
   @ApiResponse({
     status: 200,
@@ -38,13 +38,13 @@ export class TokenPriceController {
     description: 'Token not found',
   })
   findHistory(
-    @Param('tokenId') tokenId: string,
+    @Param('tokenAddress') tokenAddress: string,
     @Query() query: GetTokenPriceHistoryDto,
   ): Promise<GetManyResponse<TokenPrice>> {
-    return this.tokenPriceService.findHistory(tokenId, query);
+    return this.tokenPriceService.findHistory(tokenAddress, query);
   }
 
-  @Post(':tokenId')
+  @Post(':tokenAddress')
   @ApiOperation({ summary: 'Upsert a new price for a token' })
   @ApiResponse({
     status: 201,
@@ -56,9 +56,9 @@ export class TokenPriceController {
     description: 'Token not found',
   })
   upsert(
-    @Param('tokenId') tokenId: string,
+    @Param('tokenAddress') tokenAddress: string,
     @Body() upsertTokenPriceDto: UpsertTokenPriceDto,
   ): Promise<TokenPrice> {
-    return this.tokenPriceService.upsert(tokenId, upsertTokenPriceDto);
+    return this.tokenPriceService.upsert(tokenAddress, upsertTokenPriceDto);
   }
 }

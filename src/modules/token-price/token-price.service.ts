@@ -19,47 +19,51 @@ export class TokenPriceService {
     private tokenRepository: Repository<Token>,
   ) {}
 
-  async findLatest(tokenId: string): Promise<TokenPrice> {
+  async findLatest(tokenAddress: string): Promise<TokenPrice> {
     // Check if token exists
     const token = await this.tokenRepository.findOne({
-      where: { id: tokenId },
+      where: { address: tokenAddress },
     });
 
     if (!token) {
-      throw new NotFoundException(`Token with ID ${tokenId} not found`);
+      throw new NotFoundException(
+        `Token with address ${tokenAddress} not found`,
+      );
     }
 
     // Find latest price
     const latestPrice = await this.tokenPriceRepository.findOne({
-      where: { token: { id: tokenId } },
+      where: { token: { address: tokenAddress } },
       order: { timestamp: 'DESC' },
     });
 
     if (!latestPrice) {
-      throw new NotFoundException(`No price found for token ${tokenId}`);
+      throw new NotFoundException(`No price found for token ${tokenAddress}`);
     }
 
     return latestPrice;
   }
 
   async findHistory(
-    tokenId: string,
+    tokenAddress: string,
     query: GetTokenPriceHistoryDto,
   ): Promise<GetManyResponse<TokenPrice>> {
     // Check if token exists
     const token = await this.tokenRepository.findOne({
-      where: { id: tokenId },
+      where: { address: tokenAddress },
     });
 
     if (!token) {
-      throw new NotFoundException(`Token with ID ${tokenId} not found`);
+      throw new NotFoundException(
+        `Token with address ${tokenAddress} not found`,
+      );
     }
 
     // Build query
     const qb = this.tokenPriceRepository
       .createQueryBuilder('price')
       .leftJoinAndSelect('price.token', 'token')
-      .where('token.id = :tokenId', { tokenId });
+      .where('token.address = :tokenAddress', { tokenAddress });
 
     // Apply date filters
     if (query.from) {
@@ -72,34 +76,76 @@ export class TokenPriceService {
 
     // Apply interval grouping
     if (query.interval === PriceInterval.DAILY) {
-      qb.addSelect('DATE(price.timestamp)', 'date')
-        .groupBy('date')
-        .orderBy('date', 'DESC');
+      const rawQuery = `
+        SELECT 
+          price.id as "id",
+          token.id as "tokenId",
+          token.address as "tokenAddress",
+          token.symbol as "tokenSymbol",
+          token.name as "tokenName",
+          token.decimals as "tokenDecimals",
+          token.created_at as "tokenCreatedAt",
+          price.priceUsd as "priceUsd",
+          price.timestamp as "timestamp"
+        FROM token_price price
+        LEFT JOIN tokens token ON token.id = price.token_id
+        WHERE token.address = ?
+        ${query.from ? 'AND price.timestamp >= ?' : ''}
+        ${query.to ? 'AND price.timestamp <= ?' : ''}
+        ORDER BY price.timestamp DESC
+      `;
+
+      const prices = await this.tokenPriceRepository.query(rawQuery, [
+        tokenAddress,
+        query.from,
+        query.to,
+      ]);
+
+      // Map raw results to TokenPrice entities
+      const mappedPrices = prices.map((price: any) => {
+        const tokenPrice = new TokenPrice();
+        tokenPrice.priceUsd = price.priceUsd;
+        tokenPrice.timestamp = price.timestamp;
+        tokenPrice.token = {
+          id: price.tokenId,
+          address: price.tokenAddress,
+          symbol: price.tokenSymbol,
+          name: price.tokenName,
+          decimals: price.tokenDecimals,
+          createdAt: price.tokenCreatedAt,
+        } as Token;
+        return tokenPrice;
+      });
+
+      return {
+        data: mappedPrices,
+        total: prices.length,
+        count: mappedPrices.length,
+      };
     } else {
       qb.orderBy('price.timestamp', 'DESC');
+      const [prices, total] = await qb.getManyAndCount();
+      return {
+        data: prices,
+        total,
+        count: prices.length,
+      };
     }
-
-    // Get data and total count
-    const [prices, total] = await qb.getManyAndCount();
-
-    return {
-      data: prices,
-      total,
-      count: prices.length,
-    };
   }
 
   async upsert(
-    tokenId: string,
+    tokenAddress: string,
     upsertTokenPriceDto: UpsertTokenPriceDto,
   ): Promise<TokenPrice> {
     // Check if token exists
     const token = await this.tokenRepository.findOne({
-      where: { id: tokenId },
+      where: { address: tokenAddress },
     });
 
     if (!token) {
-      throw new NotFoundException(`Token with ID ${tokenId} not found`);
+      throw new NotFoundException(
+        `Token with address ${tokenAddress} not found`,
+      );
     }
 
     // Create new price record
