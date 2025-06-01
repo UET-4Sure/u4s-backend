@@ -8,10 +8,8 @@ import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
 import { Token } from '../token/entities/token.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
-import { GetPoolTicksDto } from './dto/get-pool-ticks.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
 import { InitializePoolDto } from './dto/initialize-pool.dto';
-import { PoolTick } from './entities/pool-tick.entity';
 import { Pool } from './entities/pool.entity';
 
 @Injectable()
@@ -21,8 +19,6 @@ export class PoolService {
     private poolRepository: Repository<Pool>,
     @InjectRepository(Token)
     private tokenRepository: Repository<Token>,
-    @InjectRepository(PoolTick)
-    private poolTickRepository: Repository<PoolTick>,
   ) {}
 
   async create(createPoolDto: CreatePoolDto): Promise<Pool> {
@@ -122,14 +118,7 @@ export class PoolService {
   async findOne(id: string): Promise<Pool> {
     const pool = await this.poolRepository.findOne({
       where: { id },
-      relations: [
-        'token0',
-        'token1',
-        'ticks',
-        'positions',
-        'swaps',
-        'flashCallbacks',
-      ],
+      relations: ['token0', 'token1', 'positions', 'swaps'],
     });
 
     if (!pool) {
@@ -155,61 +144,5 @@ export class PoolService {
     // Update pool initialization status
     pool.initialized = initializePoolDto.initialized;
     return this.poolRepository.save(pool);
-  }
-
-  async findTicks(
-    poolId: string,
-    query: GetPoolTicksDto,
-  ): Promise<GetManyResponse<PoolTick>> {
-    const { page = 1, limit = 10 } = query;
-    const offset = (page - 1) * limit;
-
-    // Check if pool exists
-    const pool = await this.poolRepository.findOne({
-      where: { id: poolId },
-    });
-
-    if (!pool) {
-      throw new NotFoundException(`Pool with ID ${poolId} not found`);
-    }
-
-    const [ticks, total] = await this.poolTickRepository.findAndCount({
-      where: { pool: { id: poolId } },
-      order: { tickIndex: 'ASC' },
-      skip: offset,
-      take: limit,
-    });
-
-    return {
-      data: ticks,
-      total,
-      count: ticks.length,
-    };
-  }
-
-  async findTick(poolId: string, tickIndex: number): Promise<PoolTick> {
-    // Check if pool exists
-    const pool = await this.poolRepository.findOne({
-      where: { id: poolId },
-    });
-
-    if (!pool) {
-      throw new NotFoundException(`Pool with ID ${poolId} not found`);
-    }
-
-    const tick = await this.poolTickRepository.findOne({
-      where: {
-        pool: { id: poolId },
-        tickIndex,
-      },
-    });
-
-    if (!tick) {
-      throw new NotFoundException(
-        `Tick with index ${tickIndex} not found in pool ${poolId}`,
-      );
-    }
-
-    return tick;
   }
 }

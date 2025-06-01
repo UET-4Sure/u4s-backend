@@ -1,4 +1,3 @@
-import { FlashCallback } from 'src/modules/flash/flash-callback.entity';
 import { Position } from 'src/modules/position/entities/position.entity';
 import { Swap } from 'src/modules/swap/entities/swap.entity';
 import {
@@ -12,12 +11,14 @@ import {
 } from 'typeorm';
 import { PoolMetrics } from '../../pool-metrics/entities/pool-metric.entity';
 import { Token } from '../../token/entities/token.entity';
-import { PoolTick } from './pool-tick.entity';
 
 @Entity('pools')
 export class Pool {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'varchar', length: 42, unique: true })
+  address: string;
 
   @ManyToOne(() => Token, (token) => token.poolsAsToken0)
   @JoinColumn({ name: 'token0_id' })
@@ -42,17 +43,11 @@ export class Pool {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @OneToMany(() => PoolTick, (tick) => tick.pool)
-  ticks: PoolTick[];
-
   @OneToMany(() => Position, (pos) => pos.pool)
   positions: Position[];
 
   @OneToMany(() => Swap, (swap) => swap.pool)
   swaps: Swap[];
-
-  @OneToMany(() => FlashCallback, (hook) => hook.pool)
-  flashCallbacks: FlashCallback[];
 
   @OneToMany(() => PoolMetrics, (metric) => metric.pool)
   metrics: PoolMetrics[];
