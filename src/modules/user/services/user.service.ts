@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BanUserDto } from '../dto/ban-user.dto';
+import { UserResponseDto } from '../dto/user-response.dto';
 import { User } from '../entities/user.entity';
 import { UserBan } from '../entities/user_ban.entity';
 
@@ -42,6 +43,26 @@ export class UserService {
       message: 'User banned successfully',
       bannedUntil: user.bannedUntil,
       reason: user.banReason,
+    };
+  }
+
+  async getUserByWallet(walletAddress: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress: walletAddress.toLowerCase() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      id: user.id,
+      walletAddress: user.walletAddress,
+      authMethod: user.authMethod,
+      email: user.email,
+      kycStatus: user.kycStatus,
+      bannedUntil: user.bannedUntil,
+      banReason: user.banReason,
     };
   }
 }
