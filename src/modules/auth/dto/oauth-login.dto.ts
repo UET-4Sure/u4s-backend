@@ -6,7 +6,12 @@ export class OAuthLoginDto {
   @ApiProperty({
     description: 'OAuth provider',
     enum: AuthMethod,
-    example: 'google',
+    enumName: 'AuthMethod',
+    example: AuthMethod.GOOGLE,
+    examples: [
+      { value: AuthMethod.GOOGLE, description: 'Google OAuth' },
+      { value: AuthMethod.FACEBOOK, description: 'Facebook OAuth' },
+    ],
   })
   @IsEnum(AuthMethod)
   @IsNotEmpty()
