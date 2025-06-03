@@ -15,6 +15,14 @@ function loadConfig() {
       password: process.env.MYSQL_PASSWORD || '',
       dbName: process.env.MYSQL_DB_NAME || 'u4s',
     },
+    auth: {
+      jwt: {
+        secret: process.env.JWT_SECRET,
+      },
+      encryption: {
+        key: process.env.ENCRYPTION_KEY,
+      },
+    },
   };
 
   return config;
