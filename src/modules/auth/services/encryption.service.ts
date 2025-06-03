@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { env } from '../../../config';
 
 @Injectable()
 export class EncryptionService {
   private readonly algorithm = 'aes-256-gcm';
-  private readonly key = crypto.scryptSync(
-    process.env.ENCRYPTION_KEY || 'your-secret-key',
-    'salt',
-    32,
-  );
+  private readonly key: Buffer;
+
+  constructor() {
+    // Convert hex string to buffer
+    this.key = Buffer.from(env.auth.encryption.key as string, 'hex');
+  }
 
   async encrypt(text: string): Promise<string> {
     const iv = crypto.randomBytes(16);
