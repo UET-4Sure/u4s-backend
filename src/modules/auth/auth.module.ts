@@ -13,7 +13,7 @@ import { OAuthService } from './services/oauth.service';
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret: env.auth.jwt.secret,
-      signOptions: { expiresIn: undefined },
+      signOptions: { expiresIn: '365d' },
     }),
   ],
   controllers: [AuthController],

@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
+import * as session from 'express-session';
 import helmet from 'helmet';
 import * as morgan from 'morgan';
 import { env } from './config';
@@ -11,6 +12,14 @@ import { AppModule } from './modules/app.module';
 
 const setMiddleware = (app: NestExpressApplication) => {
   app.use(helmet());
+
+  app.use(
+    session({
+      secret: 'your-secret-key',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
 
   app.enableCors({
     credentials: true,
