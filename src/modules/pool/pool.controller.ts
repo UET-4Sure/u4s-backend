@@ -9,11 +9,13 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
-import { CreatePoolDto } from './dto/create-pool.dto';
-import { GetPoolsDto } from './dto/get-pools.dto';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
-import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
+import { Swap } from '../swap/entities/swap.entity';
+import { CreatePoolDto } from './dto/create-pool.dto';
+import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
+import { GetPoolsDto } from './dto/get-pools.dto';
+import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
 import { PoolService } from './pool.service';
 
@@ -102,5 +104,23 @@ export class PoolController {
     @Query() query: GetPositionEventsDto,
   ): Promise<GetManyResponse<LiquidityEvent>> {
     return this.poolService.findPoolEvents(address, query);
+  }
+
+  @Get(':address/swaps')
+  @ApiOperation({ summary: 'List swaps in a specific pool' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated swaps with total count',
+    type: GetManyResponse<Swap>,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  findPoolSwaps(
+    @Param('address') address: string,
+    @Query() query: GetPoolSwapsDto,
+  ): Promise<GetManyResponse<Swap>> {
+    return this.poolService.findPoolSwaps(address, query);
   }
 }

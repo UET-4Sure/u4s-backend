@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
+import { GetPoolSwapsDto } from '../pool/dto/get-pool-swaps.dto';
 import { Pool } from '../pool/entities/pool.entity';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';
-import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
 import { GetWalletSwapsDto } from './dto/get-wallet-swaps.dto';
 import { Swap } from './entities/swap.entity';
 
@@ -52,48 +52,6 @@ export class SwapService {
     });
 
     return this.swapRepository.save(swap);
-  }
-
-  async findPoolSwaps(
-    poolAddress: string,
-    query: GetPoolSwapsDto,
-  ): Promise<GetManyResponse<Swap>> {
-    // Check if pool exists
-    const pool = await this.poolRepository.findOne({
-      where: { address: poolAddress },
-    });
-
-    if (!pool) {
-      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
-    }
-
-    // Build query
-    const qb = this.swapRepository
-      .createQueryBuilder('swap')
-      .leftJoinAndSelect('swap.pool', 'pool')
-      .where('pool.address = :poolAddress', { poolAddress });
-
-    // Apply filters
-    if (query.sender) {
-      qb.andWhere('swap.sender = :sender', { sender: query.sender });
-    }
-
-    if (query.recipient) {
-      qb.andWhere('swap.recipient = :recipient', {
-        recipient: query.recipient,
-      });
-    }
-
-    // Order by timestamp descending (most recent first)
-    qb.orderBy('swap.timestamp', 'DESC');
-
-    // Get data and total count
-    const [swaps, total] = await qb.getManyAndCount();
-    const { page = 1, limit = 10 } = query;
-    const offset = (page - 1) * limit;
-
-    // Apply pagination
-    return paginateData(swaps, { limit, offset });
   }
 
   async findWalletSwaps(

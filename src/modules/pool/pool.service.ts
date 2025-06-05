@@ -8,8 +8,10 @@ import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
+import { Swap } from '../swap/entities/swap.entity';
 import { Token } from '../token/entities/token.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
+import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
 import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
@@ -23,6 +25,8 @@ export class PoolService {
     private tokenRepository: Repository<Token>,
     @InjectRepository(LiquidityEvent)
     private liquidityEventRepository: Repository<LiquidityEvent>,
+    @InjectRepository(Swap)
+    private swapRepository: Repository<Swap>,
   ) {}
 
   async create(createPoolDto: CreatePoolDto): Promise<Pool> {
@@ -193,6 +197,39 @@ export class PoolService {
 
     const [events, total] = await qb.getManyAndCount();
     const paginatedData = paginateData(events, { limit, offset });
+
+    return {
+      data: paginatedData.data,
+      total: paginatedData.total,
+      count: paginatedData.count,
+    };
+  }
+
+  async findPoolSwaps(
+    poolAddress: string,
+    query: GetPoolSwapsDto,
+  ): Promise<GetManyResponse<Swap>> {
+    const pool = await this.poolRepository.findOne({
+      where: { address: poolAddress.toLowerCase() },
+    });
+
+    if (!pool) {
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
+    }
+
+    const { page = 1, limit = 10 } = query;
+    const offset = (page - 1) * limit;
+
+    const qb = this.swapRepository
+      .createQueryBuilder('swap')
+      .leftJoinAndSelect('swap.pool', 'pool')
+      .where('pool.address = :poolAddress', {
+        poolAddress: poolAddress.toLowerCase(),
+      })
+      .orderBy('swap.timestamp', 'DESC');
+
+    const [swaps, total] = await qb.getManyAndCount();
+    const paginatedData = paginateData(swaps, { limit, offset });
 
     return {
       data: paginatedData.data,
