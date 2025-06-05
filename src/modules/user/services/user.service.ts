@@ -129,7 +129,7 @@ export class UserService {
       documentNumber: createKycApplicationDto.documentNumber,
       documentFrontImageUrl: createKycApplicationDto.documentFrontImageUrl,
       documentBackImageUrl: createKycApplicationDto.documentBackImageUrl,
-      verificationOutcome: VerificationOutcome.PENDING,
+      verificationOutcome: VerificationOutcome.APPROVED,
     });
 
     return this.kycProfileRepository.save(kycProfile);
