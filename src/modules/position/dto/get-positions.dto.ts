@@ -4,7 +4,7 @@ import {
   IsEthereumAddress,
   IsInt,
   IsOptional,
-  IsUUID,
+  Length,
   Max,
   Min,
 } from 'class-validator';
@@ -46,11 +46,12 @@ export class GetPositionsDto {
   ownerAddress?: string;
 
   @ApiProperty({
-    description: 'Filter positions by pool ID',
+    description: 'Filter positions by pool address',
     required: false,
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: '0x1234567890123456789012345678901234567890',
   })
-  @IsUUID()
+  @IsEthereumAddress()
   @IsOptional()
-  poolId?: string;
+  @Length(42, 42)
+  poolAddress?: string;
 }

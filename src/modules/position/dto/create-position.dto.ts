@@ -5,17 +5,18 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumberString,
-  IsUUID,
+  Length,
 } from 'class-validator';
 
 export class CreatePositionDto {
   @ApiProperty({
-    description: 'Pool ID where the position will be created',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Pool address where the position will be created',
+    example: '0x1234567890123456789012345678901234567890',
   })
-  @IsUUID()
+  @IsEthereumAddress()
   @IsNotEmpty()
-  poolId: string;
+  @Length(42, 42)
+  poolAddress: string;
 
   @ApiProperty({
     description: 'Owner address of the position',

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
+import { CreateLiquidityEventDto } from './dto/create-liquidity-event.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { GetPositionEventsDto } from './dto/get-position-events.dto';
 import { GetPositionsDto } from './dto/get-positions.dto';
@@ -100,5 +101,26 @@ export class PositionController {
     @Query() query: GetPositionEventsDto,
   ): Promise<GetManyResponse<LiquidityEvent>> {
     return this.positionService.findEvents(id, query);
+  }
+
+  @Post(':id/events')
+  @ApiOperation({ summary: 'Add a new liquidity event to a position' })
+  @ApiResponse({
+    status: 201,
+    description: 'Liquidity event created successfully',
+    type: LiquidityEvent,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Position not found',
+  })
+  createLiquidityEvent(
+    @Param('id') id: string,
+    @Body() createLiquidityEventDto: CreateLiquidityEventDto,
+  ): Promise<LiquidityEvent> {
+    return this.positionService.createLiquidityEvent(
+      id,
+      createLiquidityEventDto,
+    );
   }
 }

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
 import { Pool } from '../pool/entities/pool.entity';
+import { CreateLiquidityEventDto } from './dto/create-liquidity-event.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { GetPositionEventsDto } from './dto/get-position-events.dto';
 import { GetPositionsDto } from './dto/get-positions.dto';
@@ -23,12 +24,12 @@ export class PositionService {
   async create(createPositionDto: CreatePositionDto): Promise<Position> {
     // Check if pool exists
     const pool = await this.poolRepository.findOne({
-      where: { id: createPositionDto.poolId },
+      where: { address: createPositionDto.poolAddress },
     });
 
     if (!pool) {
       throw new NotFoundException(
-        `Pool with ID ${createPositionDto.poolId} not found`,
+        `Pool with address ${createPositionDto.poolAddress} not found`,
       );
     }
 
@@ -52,7 +53,7 @@ export class PositionService {
   }
 
   async findAll(query: GetPositionsDto): Promise<GetManyResponse<Position>> {
-    const { page = 1, limit = 10, ownerAddress, poolId } = query;
+    const { page = 1, limit = 10, ownerAddress, poolAddress } = query;
     const offset = (page - 1) * limit;
 
     const qb = this.positionRepository
@@ -66,8 +67,8 @@ export class PositionService {
       qb.andWhere('position.ownerAddress = :ownerAddress', { ownerAddress });
     }
 
-    if (poolId) {
-      qb.andWhere('pool.id = :poolId', { poolId });
+    if (poolAddress) {
+      qb.andWhere('pool.address = :poolAddress', { poolAddress });
     }
 
     const [positions, total] = await qb.getManyAndCount();
@@ -146,5 +147,31 @@ export class PositionService {
       total: paginatedData.total,
       count: paginatedData.count,
     };
+  }
+
+  async createLiquidityEvent(
+    positionId: string,
+    createLiquidityEventDto: CreateLiquidityEventDto,
+  ): Promise<LiquidityEvent> {
+    // Check if position exists
+    const position = await this.positionRepository.findOne({
+      where: { id: positionId },
+    });
+
+    if (!position) {
+      throw new NotFoundException(`Position with ID ${positionId} not found`);
+    }
+
+    // Create new liquidity event
+    const liquidityEvent = this.liquidityEventRepository.create({
+      position,
+      type: createLiquidityEventDto.type,
+      liquidityAmount: createLiquidityEventDto.liquidityAmount,
+      amount0: createLiquidityEventDto.amount0,
+      amount1: createLiquidityEventDto.amount1,
+      txHash: createLiquidityEventDto.txHash,
+    });
+
+    return this.liquidityEventRepository.save(liquidityEvent);
   }
 }
