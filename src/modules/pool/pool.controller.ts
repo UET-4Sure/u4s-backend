@@ -29,7 +29,8 @@ export class PoolController {
   })
   @ApiResponse({
     status: 409,
-    description: 'Pool with these tokens and fee tier already exists',
+    description:
+      'Pool with this address or with these tokens and fee tier already exists',
   })
   @ApiResponse({
     status: 404,
@@ -50,8 +51,8 @@ export class PoolController {
     return this.poolService.findAll(query);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get pool details by ID' })
+  @Get(':address')
+  @ApiOperation({ summary: 'Get pool details by address' })
   @ApiResponse({
     status: 200,
     description: 'Return pool details with all related data',
@@ -61,11 +62,11 @@ export class PoolController {
     status: 404,
     description: 'Pool not found',
   })
-  findOne(@Param('id') id: string): Promise<Pool> {
-    return this.poolService.findOne(id);
+  findOne(@Param('address') address: string): Promise<Pool> {
+    return this.poolService.findOne(address);
   }
 
-  @Patch(':id/initialize')
+  @Patch(':address/initialize')
   @ApiOperation({ summary: 'Mark a pool as initialized' })
   @ApiResponse({
     status: 200,
@@ -77,9 +78,9 @@ export class PoolController {
     description: 'Pool not found',
   })
   initialize(
-    @Param('id') id: string,
+    @Param('address') address: string,
     @Body() initializePoolDto: InitializePoolDto,
   ): Promise<Pool> {
-    return this.poolService.initialize(id, initializePoolDto);
+    return this.poolService.initialize(address, initializePoolDto);
   }
 }

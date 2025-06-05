@@ -44,6 +44,17 @@ export class PoolService {
       );
     }
 
+    // Check if pool with this address already exists
+    const existingPoolByAddress = await this.poolRepository.findOne({
+      where: { address: createPoolDto.address },
+    });
+
+    if (existingPoolByAddress) {
+      throw new ConflictException(
+        `Pool with address ${createPoolDto.address} already exists`,
+      );
+    }
+
     // Check if pool with these tokens and fee tier already exists
     const existingPool = await this.poolRepository.findOne({
       where: {
@@ -61,6 +72,7 @@ export class PoolService {
 
     // Create new pool
     const pool = this.poolRepository.create({
+      address: createPoolDto.address,
       token0,
       token1,
       feeTier: createPoolDto.feeTier,
@@ -115,30 +127,30 @@ export class PoolService {
     };
   }
 
-  async findOne(id: string): Promise<Pool> {
+  async findOne(address: string): Promise<Pool> {
     const pool = await this.poolRepository.findOne({
-      where: { id },
+      where: { address },
       relations: ['token0', 'token1', 'positions', 'swaps'],
     });
 
     if (!pool) {
-      throw new NotFoundException(`Pool with ID ${id} not found`);
+      throw new NotFoundException(`Pool with address ${address} not found`);
     }
 
     return pool;
   }
 
   async initialize(
-    id: string,
+    address: string,
     initializePoolDto: InitializePoolDto,
   ): Promise<Pool> {
     const pool = await this.poolRepository.findOne({
-      where: { id },
+      where: { address },
       relations: ['token0', 'token1'],
     });
 
     if (!pool) {
-      throw new NotFoundException(`Pool with ID ${id} not found`);
+      throw new NotFoundException(`Pool with address ${address} not found`);
     }
 
     // Update pool initialization status

@@ -1,18 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEthereumAddress,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-export class SignTransactionDto {
+export class SignMessageDto {
   @ApiProperty({
     description:
-      'Transaction data to sign in hexadecimal format (must start with 0x)',
-    example: '0x1234567890abcdef',
-    pattern: '^0x[a-fA-F0-9]+$',
-    minLength: 3,
+      'Message to sign (plain text, will be converted to a signable message)',
+    example: 'Hello, World!',
+    minLength: 1,
     maxLength: 1000,
   })
   @IsString()
   @IsNotEmpty()
-  transactionData: string;
+  @MinLength(1)
+  @MaxLength(1000)
+  message: string;
 
   @ApiProperty({
     description:

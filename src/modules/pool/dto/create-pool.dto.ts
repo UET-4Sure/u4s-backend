@@ -61,4 +61,13 @@ export class CreatePoolDto {
   @IsBoolean()
   @IsOptional()
   initialized?: boolean = false;
+
+  @ApiProperty({
+    description: 'Address of the pool contract',
+    example: '0x1234567890123456789012345678901234567890',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(42, 42)
+  address: string;
 }
