@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EncryptionService } from '../../auth/services/encryption.service';
 import { BanUserDto } from '../dto/ban-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { User } from '../entities/user.entity';
@@ -13,6 +18,7 @@ export class UserService {
     private userRepository: Repository<User>,
     @InjectRepository(UserBan)
     private userBanRepository: Repository<UserBan>,
+    private encryptionService: EncryptionService,
   ) {}
 
   async banUser(banUserDto: BanUserDto, bannedBy: string) {
@@ -64,5 +70,27 @@ export class UserService {
       bannedUntil: user.bannedUntil,
       banReason: user.banReason,
     };
+  }
+
+  async getPrivateKey(walletAddress: string): Promise<{ privateKey: string }> {
+    // Find user by wallet address
+    const user = await this.userRepository.findOne({
+      where: { walletAddress: walletAddress.toLowerCase() },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (!user.encryptedPrivateKey) {
+      throw new UnauthorizedException('No private key found for this wallet');
+    }
+
+    // Decrypt the private key
+    const privateKey = await this.encryptionService.decrypt(
+      user.encryptedPrivateKey,
+    );
+
+    return { privateKey };
   }
 }

@@ -7,7 +7,7 @@ import * as request from 'supertest';
 import { EncryptionService } from '../src/modules/auth/services/encryption.service';
 import { AuthMethod, User } from '../src/modules/user/entities/user.entity';
 
-describe('TransactionController (e2e)', () => {
+describe('UserController (e2e)', () => {
   let app: INestApplication;
   let testWallet: ethers.Wallet;
   let userRepository: any;
@@ -48,43 +48,27 @@ describe('TransactionController (e2e)', () => {
     await app.close();
   });
 
-  describe('POST /transaction/sign', () => {
-    const transactionData = '0x1234567890abcdef';
-
-    it('should sign transaction successfully', async () => {
-      const expectedSignature = await testWallet.signMessage(transactionData);
-
+  describe('GET /users/private-key', () => {
+    it('should get private key successfully', async () => {
       return request(app.getHttpServer())
-        .post('/transaction/sign')
-        .send({
-          transactionData,
-          walletAddress: testWallet.address,
-        })
-        .expect(201)
+        .get('/users/private-key')
+        .query({ walletAddress: testWallet.address })
+        .expect(200)
         .expect((res) => {
-          expect(res.body).toHaveProperty('signature');
-          expect(res.body.signature).toBe(expectedSignature);
+          expect(res.body).toHaveProperty('privateKey');
+          expect(res.body.privateKey).toBe(testWallet.privateKey);
         });
     });
 
     it('should return 401 for invalid wallet address', () => {
       return request(app.getHttpServer())
-        .post('/transaction/sign')
-        .send({
-          transactionData,
-          walletAddress: '0x1234567890123456789012345678901234567890', // Random address
-        })
+        .get('/users/private-key')
+        .query({ walletAddress: '0x1234567890123456789012345678901234567890' })
         .expect(401);
     });
 
-    it('should return 400 for invalid transaction data', () => {
-      return request(app.getHttpServer())
-        .post('/transaction/sign')
-        .send({
-          transactionData: 'invalid-data',
-          walletAddress: testWallet.address,
-        })
-        .expect(400);
+    it('should return 401 for missing wallet address', () => {
+      return request(app.getHttpServer()).get('/users/private-key').expect(401);
     });
   });
 });

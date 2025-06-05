@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ethers } from 'ethers';
 import { Repository } from 'typeorm';
@@ -17,6 +21,11 @@ export class TransactionService {
   async signTransaction(
     dto: SignTransactionDto,
   ): Promise<{ signature: string }> {
+    // Validate transaction data format
+    if (!ethers.isHexString(dto.transactionData)) {
+      throw new BadRequestException('Invalid transaction data format');
+    }
+
     // Find user by wallet address
     const user = await this.userRepository.findOne({
       where: { walletAddress: dto.walletAddress.toLowerCase() },
