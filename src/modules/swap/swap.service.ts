@@ -53,35 +53,4 @@ export class SwapService {
 
     return this.swapRepository.save(swap);
   }
-
-  async findWalletSwaps(
-    walletAddress: string,
-    query: GetWalletSwapsDto,
-  ): Promise<GetManyResponse<Swap>> {
-    const { page = 1, limit = 10 } = query;
-    const offset = (page - 1) * limit;
-
-    // Build query to find swaps where the wallet is either sender or recipient
-    const qb = this.swapRepository
-      .createQueryBuilder('swap')
-      .leftJoinAndSelect('swap.pool', 'pool')
-      .leftJoinAndSelect('pool.token0', 'token0')
-      .leftJoinAndSelect('pool.token1', 'token1')
-      .where(
-        'swap.sender = :walletAddress OR swap.recipient = :walletAddress',
-        {
-          walletAddress,
-        },
-      )
-      .orderBy('swap.timestamp', 'DESC');
-
-    const [swaps, total] = await qb.getManyAndCount();
-    const paginatedData = paginateData(swaps, { limit, offset });
-
-    return {
-      data: paginatedData.data,
-      total: paginatedData.total,
-      count: paginatedData.count,
-    };
-  }
 }

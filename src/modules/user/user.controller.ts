@@ -8,9 +8,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetManyResponse } from '../../common/dtos';
+import { Swap } from '../swap/entities/swap.entity';
 import { BanUserDto } from './dto/ban-user.dto';
 import { CreateKycApplicationDto } from './dto/create-kyc-application.dto';
 import { GetKycApplicationsDto } from './dto/get-kyc-applications.dto';
+import { GetWalletSwapsDto } from './dto/get-wallet-swaps.dto';
 import { KycApplicationResponseDto } from './dto/kyc-application-response.dto';
 import { KycStatusResponseDto } from './dto/kyc-status-response.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -117,5 +120,19 @@ export class UserController {
     @Param('walletAddress') walletAddress: string,
   ): Promise<KycStatusResponseDto> {
     return this.userService.getKycStatus(walletAddress);
+  }
+
+  @Get('wallet/:address/swaps')
+  @ApiOperation({ summary: 'List all swaps for a specific wallet address' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated swaps with total count',
+    type: GetManyResponse<Swap>,
+  })
+  findWalletSwaps(
+    @Param('address') address: string,
+    @Query() query: GetWalletSwapsDto,
+  ): Promise<GetManyResponse<Swap>> {
+    return this.userService.findWalletSwaps(address, query);
   }
 }
