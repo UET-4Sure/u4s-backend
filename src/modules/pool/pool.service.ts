@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
+import { ExecuteSwapDto } from './dto/execute-swap.dto';
 import { Swap } from '../swap/entities/swap.entity';
 import { Token } from '../token/entities/token.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
@@ -236,5 +237,43 @@ export class PoolService {
       total: paginatedData.total,
       count: paginatedData.count,
     };
+  }
+
+  async executeSwap(
+    poolAddress: string,
+    executeSwapDto: ExecuteSwapDto,
+  ): Promise<Swap> {
+    // Find the pool
+    const pool = await this.poolRepository.findOne({
+      where: { address: poolAddress.toLowerCase() },
+      relations: ['token0', 'token1'],
+    });
+
+    if (!pool) {
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
+    }
+
+    // TODO: Implement the actual swap logic here
+    // This would typically involve:
+    // 1. Validating the swap parameters
+    // 2. Calculating the expected output amount
+    // 3. Executing the swap on-chain
+    // 4. Recording the swap details
+
+    // Create swap record with the provided sender
+    const swap = this.swapRepository.create({
+      pool,
+      sender: executeSwapDto.sender,
+      recipient: executeSwapDto.recipient,
+      tokenInAddress: executeSwapDto.tokenInAddress,
+      amountIn: executeSwapDto.amountIn,
+      amountOut: '0', // This would be calculated based on the pool state
+      sqrtPriceX96: '0', // This would be updated based on the pool state
+      liquidity: '0', // This would be updated based on the pool state
+      tick: 0, // This would be updated based on the pool state
+      txHash: '0x', // This would be the actual transaction hash
+    });
+
+    return this.swapRepository.save(swap);
   }
 }

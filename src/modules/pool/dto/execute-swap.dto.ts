@@ -9,15 +9,6 @@ import {
 
 export class ExecuteSwapDto {
   @ApiProperty({
-    description: 'Pool address where the swap will be executed',
-    example: '0x1234567890123456789012345678901234567890',
-  })
-  @IsEthereumAddress()
-  @IsNotEmpty()
-  @Length(42, 42)
-  poolAddress: string;
-
-  @ApiProperty({
     description: 'Address of the token being swapped in',
     example: '0x1234567890123456789012345678901234567890',
   })

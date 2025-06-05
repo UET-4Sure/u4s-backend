@@ -11,6 +11,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
+import { ExecuteSwapDto } from './dto/execute-swap.dto';
 import { Swap } from '../swap/entities/swap.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
@@ -122,5 +123,27 @@ export class PoolController {
     @Query() query: GetPoolSwapsDto,
   ): Promise<GetManyResponse<Swap>> {
     return this.poolService.findPoolSwaps(address, query);
+  }
+
+  @Post(':address/swaps')
+  @ApiOperation({ summary: 'Execute a swap in a pool' })
+  @ApiResponse({
+    status: 201,
+    description: 'Swap executed successfully',
+    type: Swap,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid swap parameters',
+  })
+  executeSwap(
+    @Param('address') address: string,
+    @Body() executeSwapDto: ExecuteSwapDto,
+  ): Promise<Swap> {
+    return this.poolService.executeSwap(address, executeSwapDto);
   }
 }

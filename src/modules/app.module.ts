@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { PoolMetricsModule } from './pool-metrics/pool-metrics.module';
 import { PoolModule } from './pool/pool.module';
 import { PositionModule } from './position/position.module';
-import { SwapModule } from './swap/swap.module';
 import { TokenPriceModule } from './token-price/token-price.module';
 import { TokenModule } from './token/token.module';
 import { TransactionModule } from './transaction/transaction.module';
@@ -26,7 +25,6 @@ import { UserModule } from './user/user.module';
     PoolModule,
     PoolMetricsModule,
     PositionModule,
-    SwapModule,
   ],
 })
 export class AppModule {}
