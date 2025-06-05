@@ -9,6 +9,7 @@ import { EncryptionService } from '../../auth/services/encryption.service';
 import { BanUserDto } from '../dto/ban-user.dto';
 import { CreateKycApplicationDto } from '../dto/create-kyc-application.dto';
 import { KycApplicationResponseDto } from '../dto/kyc-application-response.dto';
+import { KycLevel, KycStatusResponseDto } from '../dto/kyc-status-response.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import {
   KycProfile,
@@ -171,5 +172,53 @@ export class UserService {
       reviewedAt: app.reviewedAt,
       reviewNotes: app.reviewNotes,
     }));
+  }
+
+  async getKycStatus(walletAddress: string): Promise<KycStatusResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress: walletAddress.toLowerCase() },
+      relations: ['kycProfile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(
+        `User with wallet address ${walletAddress} not found`,
+      );
+    }
+
+    // Get all applications ordered by latest first
+    const applications = await this.kycProfileRepository
+      .createQueryBuilder('kyc')
+      .where('kyc.user_id = :userId', { userId: user.id })
+      .orderBy('kyc.createdAt', 'DESC')
+      .getMany();
+
+    // Find approved application or get the latest one
+    const approvedApplication = applications.find(
+      (app) => app.verificationOutcome === VerificationOutcome.APPROVED,
+    );
+    const latestApplication = applications[0] || null;
+
+    // Determine KYC level and which application to return
+    const level = approvedApplication ? KycLevel.BASIC : KycLevel.NONE;
+    const applicationToReturn = approvedApplication || latestApplication;
+
+    return {
+      level,
+      latestApplication: applicationToReturn
+        ? {
+            id: applicationToReturn.id,
+            status: applicationToReturn.verificationOutcome,
+            documentType: applicationToReturn.documentType,
+            documentNumber: applicationToReturn.documentNumber,
+            documentFrontImageUrl: applicationToReturn.documentFrontImageUrl,
+            documentBackImageUrl: applicationToReturn.documentBackImageUrl,
+            fullName: applicationToReturn.fullName,
+            submittedAt: applicationToReturn.createdAt,
+            reviewedAt: applicationToReturn.reviewedAt,
+            reviewNotes: applicationToReturn.reviewNotes,
+          }
+        : null,
+    };
   }
 }

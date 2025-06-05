@@ -12,6 +12,7 @@ import { BanUserDto } from './dto/ban-user.dto';
 import { CreateKycApplicationDto } from './dto/create-kyc-application.dto';
 import { GetKycApplicationsDto } from './dto/get-kyc-applications.dto';
 import { KycApplicationResponseDto } from './dto/kyc-application-response.dto';
+import { KycStatusResponseDto } from './dto/kyc-status-response.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { KycProfile } from './entities/kyc_profile.entity';
 import { UserService } from './services/user.service';
@@ -101,5 +102,20 @@ export class UserController {
     @Query() query: GetKycApplicationsDto,
   ): Promise<KycApplicationResponseDto[]> {
     return this.userService.getKycApplications(walletAddress, query.status);
+  }
+
+  @Get('wallet/:walletAddress/kyc/status')
+  @ApiOperation({ summary: 'Get user KYC status' })
+  @ApiParam({ name: 'walletAddress', description: 'Wallet address' })
+  @ApiResponse({
+    status: 200,
+    description: 'User KYC status',
+    type: KycStatusResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getKycStatus(
+    @Param('walletAddress') walletAddress: string,
+  ): Promise<KycStatusResponseDto> {
+    return this.userService.getKycStatus(walletAddress);
   }
 }
