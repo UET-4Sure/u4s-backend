@@ -4,17 +4,18 @@ import {
   IsEthereumAddress,
   IsNotEmpty,
   IsNumberString,
-  IsUUID,
+  Length,
 } from 'class-validator';
 
 export class ExecuteSwapDto {
   @ApiProperty({
-    description: 'Pool ID where the swap will be executed',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Pool address where the swap will be executed',
+    example: '0x1234567890123456789012345678901234567890',
   })
-  @IsUUID()
+  @IsEthereumAddress()
   @IsNotEmpty()
-  poolId: string;
+  @Length(42, 42)
+  poolAddress: string;
 
   @ApiProperty({
     description: 'Address of the token being swapped in',
@@ -22,10 +23,11 @@ export class ExecuteSwapDto {
   })
   @IsEthereumAddress()
   @IsNotEmpty()
+  @Length(42, 42)
   tokenInAddress: string;
 
   @ApiProperty({
-    description: 'Amount of token being swapped in',
+    description: 'Amount of tokens to swap',
     example: '1000000000000000000',
   })
   @IsNumberString()
@@ -41,7 +43,7 @@ export class ExecuteSwapDto {
   amountOutMinimum: string;
 
   @ApiProperty({
-    description: 'Address that initiates the swap',
+    description: 'Address of the swap sender',
     example: '0x1234567890123456789012345678901234567890',
   })
   @IsEthereumAddress()
@@ -49,7 +51,7 @@ export class ExecuteSwapDto {
   sender: string;
 
   @ApiProperty({
-    description: 'Address that will receive the swapped tokens',
+    description: 'Address of the swap recipient',
     example: '0x1234567890123456789012345678901234567890',
   })
   @IsEthereumAddress()
