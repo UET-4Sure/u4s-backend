@@ -3,6 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';
 import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
+import { GetWalletSwapsDto } from './dto/get-wallet-swaps.dto';
 import { Swap } from './entities/swap.entity';
 import { SwapService } from './swap.service';
 
@@ -30,7 +31,7 @@ export class SwapController {
     return this.swapService.execute(executeSwapDto);
   }
 
-  @Get('pools/:id/swaps')
+  @Get('pools/:address')
   @ApiOperation({ summary: 'List swaps in a specific pool' })
   @ApiResponse({
     status: 200,
@@ -42,9 +43,23 @@ export class SwapController {
     description: 'Pool not found',
   })
   findPoolSwaps(
-    @Param('id') id: string,
+    @Param('address') address: string,
     @Query() query: GetPoolSwapsDto,
   ): Promise<GetManyResponse<Swap>> {
-    return this.swapService.findPoolSwaps(id, query);
+    return this.swapService.findPoolSwaps(address, query);
+  }
+
+  @Get('wallets/:address')
+  @ApiOperation({ summary: 'List all swaps for a specific wallet address' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated swaps with total count',
+    type: GetManyResponse<Swap>,
+  })
+  findWalletSwaps(
+    @Param('address') address: string,
+    @Query() query: GetWalletSwapsDto,
+  ): Promise<GetManyResponse<Swap>> {
+    return this.swapService.findWalletSwaps(address, query);
   }
 }

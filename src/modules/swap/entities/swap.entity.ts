@@ -37,6 +37,9 @@ export class Swap {
   @JoinColumn({ name: 'recipient', referencedColumnName: 'walletAddress' })
   userRecipient: User | null;
 
+  @Column({ type: 'varchar', length: 42, name: 'token_in_address' })
+  tokenInAddress: string;
+
   @Column('numeric', { precision: 38, scale: 18, name: 'amount_in' })
   amountIn: string;
 
