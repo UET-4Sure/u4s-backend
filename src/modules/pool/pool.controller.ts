@@ -11,7 +11,9 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from '../../common/dtos';
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
+import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { InitializePoolDto } from './dto/initialize-pool.dto';
+import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
 import { Pool } from './entities/pool.entity';
 import { PoolService } from './pool.service';
 
@@ -82,5 +84,23 @@ export class PoolController {
     @Body() initializePoolDto: InitializePoolDto,
   ): Promise<Pool> {
     return this.poolService.initialize(address, initializePoolDto);
+  }
+
+  @Get(':address/events')
+  @ApiOperation({ summary: 'List all liquidity events for a pool' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated liquidity events with total count',
+    type: GetManyResponse<LiquidityEvent>,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  findPoolEvents(
+    @Param('address') address: string,
+    @Query() query: GetPositionEventsDto,
+  ): Promise<GetManyResponse<LiquidityEvent>> {
+    return this.poolService.findPoolEvents(address, query);
   }
 }

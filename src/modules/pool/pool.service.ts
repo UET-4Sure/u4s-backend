@@ -6,6 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GetManyResponse, paginateData } from '../../common/dtos';
+import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
+import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
 import { Token } from '../token/entities/token.entity';
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
@@ -19,6 +21,8 @@ export class PoolService {
     private poolRepository: Repository<Pool>,
     @InjectRepository(Token)
     private tokenRepository: Repository<Token>,
+    @InjectRepository(LiquidityEvent)
+    private liquidityEventRepository: Repository<LiquidityEvent>,
   ) {}
 
   async create(createPoolDto: CreatePoolDto): Promise<Pool> {
@@ -156,5 +160,44 @@ export class PoolService {
     // Update pool initialization status
     pool.initialized = initializePoolDto.initialized;
     return this.poolRepository.save(pool);
+  }
+
+  async findPoolEvents(
+    poolAddress: string,
+    query: GetPositionEventsDto,
+  ): Promise<GetManyResponse<LiquidityEvent>> {
+    // Check if pool exists
+    const pool = await this.poolRepository.findOne({
+      where: { address: poolAddress.toLowerCase() },
+    });
+
+    if (!pool) {
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
+    }
+
+    const { page = 1, limit = 10, type } = query;
+    const offset = (page - 1) * limit;
+
+    const qb = this.liquidityEventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.position', 'position')
+      .leftJoinAndSelect('position.pool', 'pool')
+      .where('pool.address = :poolAddress', {
+        poolAddress: poolAddress.toLowerCase(),
+      })
+      .orderBy('event.createdAt', 'DESC');
+
+    if (type) {
+      qb.andWhere('event.type = :type', { type });
+    }
+
+    const [events, total] = await qb.getManyAndCount();
+    const paginatedData = paginateData(events, { limit, offset });
+
+    return {
+      data: paginatedData.data,
+      total: paginatedData.total,
+      count: paginatedData.count,
+    };
   }
 }
