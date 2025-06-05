@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetManyResponse } from '../../common/dtos';
+import { GetManyResponse } from 'src/common/dtos';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { GetTokensDto } from './dto/get-tokens.dto';
 import { UpdateTokenDto } from './dto/update-token.dto';

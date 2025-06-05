@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetManyResponse } from '../../common/dtos';
+import { GetManyResponse } from 'src/common/dtos';
 import { GetTokenPriceHistoryDto } from './dto/get-token-price-history.dto';
 import { UpsertTokenPriceDto } from './dto/upsert-token-price.dto';
 import { TokenPrice } from './entities/token-price.entity';

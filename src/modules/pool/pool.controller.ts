@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetManyResponse } from '../../common/dtos';
+import { GetManyResponse } from 'src/common/dtos';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';

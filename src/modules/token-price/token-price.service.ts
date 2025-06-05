@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GetManyResponse } from '../../common/dtos';
+import { GetManyResponse } from 'src/common/dtos';
 import { Token } from '../token/entities/token.entity';
 import {
   GetTokenPriceHistoryDto,

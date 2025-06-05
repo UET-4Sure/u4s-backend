@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { env } from '../../../config';
+import { env } from 'src/config';
 
 @Injectable()
 export class EncryptionService {

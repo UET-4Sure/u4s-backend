@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GetManyResponse, paginateData } from '../../common/dtos';
+import { GetManyResponse, paginateData } from 'src/common/dtos';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';

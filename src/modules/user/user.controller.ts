@@ -8,7 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetManyResponse } from '../../common/dtos';
+import { GetManyResponse } from 'src/common/dtos';
 import { Swap } from '../swap/entities/swap.entity';
 import { BanUserDto } from './dto/ban-user.dto';
 import { CreateKycApplicationDto } from './dto/create-kyc-application.dto';

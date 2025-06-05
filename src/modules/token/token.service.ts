@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
-import { GetManyResponse, paginateData } from '../../common/dtos';
+import { GetManyResponse, paginateData } from 'src/common/dtos';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { GetTokensDto } from './dto/get-tokens.dto';
 import { UpdateTokenDto } from './dto/update-token.dto';
