@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+
 import { LiquidityEventType } from '../entities/liquidity-event.entity';
 
 export class GetPositionEventsDto {

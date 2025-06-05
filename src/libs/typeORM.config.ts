@@ -1,6 +1,8 @@
 import { join } from 'path';
-import { env } from 'src/config';
+
 import { DataSource } from 'typeorm';
+
+import { env } from 'src/config';
 
 const dataSource = new DataSource({
   type: 'mysql',

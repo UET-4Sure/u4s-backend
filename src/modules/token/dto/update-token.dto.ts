@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { IsNumber, IsOptional, IsString, Length } from 'class-validator';
 
 export class UpdateTokenDto {

@@ -1,4 +1,3 @@
-import { Token } from 'src/modules/token/entities/token.entity';
 import {
   Column,
   Entity,
@@ -6,6 +5,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Token } from 'src/modules/token/entities/token.entity';
 
 @Entity('token_price')
 export class TokenPrice {

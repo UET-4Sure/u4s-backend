@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 
 export enum PriceInterval {

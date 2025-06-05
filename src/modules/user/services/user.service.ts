@@ -4,9 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Repository } from 'typeorm';
-import { EncryptionService } from 'src/modules/auth/services/encryption.service';
+
 import { GetManyResponse, paginateData } from 'src/common/dtos';
+import { EncryptionService } from 'src/modules/auth/services/encryption.service';
+
 import { Swap } from '../../swap/entities/swap.entity';
 import { BanUserDto } from '../dto/ban-user.dto';
 import { CreateKycApplicationDto } from '../dto/create-kyc-application.dto';
@@ -253,7 +256,7 @@ export class UserService {
 
     return {
       data: paginatedData.data,
-      total: paginatedData.total,
+      total,
       count: paginatedData.count,
     };
   }

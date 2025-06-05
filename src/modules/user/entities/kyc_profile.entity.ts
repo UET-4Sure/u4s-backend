@@ -9,6 +9,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
+
 import { User } from './user.entity';
 
 export enum DocumentType {

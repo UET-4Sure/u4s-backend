@@ -5,6 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import { Pool } from '../../pool/entities/pool.entity';
 import { TokenPrice } from '../../token-price/entities/token-price.entity';
 

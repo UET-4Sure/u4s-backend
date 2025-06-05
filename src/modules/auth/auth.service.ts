@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import {
   ForbiddenException,
   Injectable,
@@ -5,10 +7,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { randomBytes } from 'crypto';
+
 import { ethers } from 'ethers';
 import { Repository } from 'typeorm';
+
 import { AuthMethod, KycStatus, User } from '../user/entities/user.entity';
+
 import { OAuthLoginDto } from './dto/oauth-login.dto';
 import { WalletLoginDto } from './dto/wallet-login.dto';
 import { EncryptionService } from './services/encryption.service';

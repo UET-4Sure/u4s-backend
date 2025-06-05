@@ -1,5 +1,3 @@
-import { Position } from 'src/modules/position/entities/position.entity';
-import { Swap } from 'src/modules/swap/entities/swap.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,6 +7,10 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Position } from 'src/modules/position/entities/position.entity';
+import { Swap } from 'src/modules/swap/entities/swap.entity';
+
 import { PoolMetrics } from '../../pool-metrics/entities/pool-metric.entity';
 import { Token } from '../../token/entities/token.entity';
 

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { IsEnum, IsNotEmpty, IsNumberString, Length } from 'class-validator';
+
 import { LiquidityEventType } from '../entities/liquidity-event.entity';
 
 export class CreateLiquidityEventDto {

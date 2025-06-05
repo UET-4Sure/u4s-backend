@@ -1,4 +1,3 @@
-import { Pool } from 'src/modules/pool/entities/pool.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,6 +6,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Pool } from 'src/modules/pool/entities/pool.entity';
 
 @Entity('pool_metrics')
 export class PoolMetrics {

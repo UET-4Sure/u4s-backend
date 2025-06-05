@@ -2,13 +2,15 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import dataSource from 'src/libs/typeORM.config';
+
 import { AuthModule } from './auth/auth.module';
-import { PoolMetricsModule } from './pool-metrics/pool-metrics.module';
 import { PoolModule } from './pool/pool.module';
+import { PoolMetricsModule } from './pool-metrics/pool-metrics.module';
 import { PositionModule } from './position/position.module';
-import { TokenPriceModule } from './token-price/token-price.module';
 import { TokenModule } from './token/token.module';
+import { TokenPriceModule } from './token-price/token-price.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { UserModule } from './user/user.module';
 

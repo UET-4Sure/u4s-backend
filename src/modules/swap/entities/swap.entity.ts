@@ -1,7 +1,5 @@
 // src/modules/pool/entities/swap.entity.ts
 
-import { Pool } from 'src/modules/pool/entities/pool.entity';
-import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -10,6 +8,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Pool } from 'src/modules/pool/entities/pool.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Entity('swaps')
 export class Swap {

@@ -1,7 +1,5 @@
 // src/modules/pool/entities/position.entity.ts
 
-import { Pool } from 'src/modules/pool/entities/pool.entity';
-import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +9,10 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Pool } from 'src/modules/pool/entities/pool.entity';
+import { User } from 'src/modules/user/entities/user.entity';
+
 import { LiquidityEvent } from './liquidity-event.entity';
 
 @Entity('positions')

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { IsEnum, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+
 import { DocumentType } from '../entities/kyc_profile.entity';
 
 export class CreateKycApplicationDto {

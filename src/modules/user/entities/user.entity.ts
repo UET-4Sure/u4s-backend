@@ -1,5 +1,3 @@
-import { Position } from 'src/modules/position/entities/position.entity';
-import { Swap } from 'src/modules/swap/entities/swap.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,6 +7,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Position } from 'src/modules/position/entities/position.entity';
+import { Swap } from 'src/modules/swap/entities/swap.entity';
+
 import { KycProfile } from './kyc_profile.entity';
 
 export enum AuthMethod {

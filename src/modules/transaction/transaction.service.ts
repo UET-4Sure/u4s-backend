@@ -5,10 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { ethers } from 'ethers';
 import { Repository } from 'typeorm';
+
 import { EncryptionService } from '../auth/services/encryption.service';
 import { User } from '../user/entities/user.entity';
+
 import { SignMessageDto } from './dto/sign-message.dto';
 import { SignTransactionDto } from './dto/sign-transaction.dto';
 

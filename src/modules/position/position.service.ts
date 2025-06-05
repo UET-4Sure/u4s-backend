@@ -1,8 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Repository } from 'typeorm';
+
 import { GetManyResponse, paginateData } from 'src/common/dtos';
+
 import { Pool } from '../pool/entities/pool.entity';
+
 import { CreateLiquidityEventDto } from './dto/create-liquidity-event.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { GetPositionEventsDto } from './dto/get-position-events.dto';
