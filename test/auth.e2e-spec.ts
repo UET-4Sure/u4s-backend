@@ -103,11 +103,10 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('POST /auth/oauth-login', () => {
-    const realGoogleToken = process.env.TEST_GOOGLE_TOKEN;
-
     it('should login successfully with Google OAuth', async () => {
-      if (!realGoogleToken) {
-        console.warn('Skipping Google OAuth test - no test token provided');
+      // Skip test if no Google token is provided
+      if (!process.env.TEST_GOOGLE_TOKEN) {
+        console.log('Skipping Google OAuth test - no test token provided');
         return;
       }
 
@@ -115,7 +114,7 @@ describe('AuthController (e2e)', () => {
         .post('/auth/oauth-login')
         .send({
           provider: AuthMethod.GOOGLE,
-          accessToken: realGoogleToken,
+          accessToken: process.env.TEST_GOOGLE_TOKEN,
         })
         .expect(201)
         .expect((res) => {

@@ -6,7 +6,12 @@ export class OAuthService {
   async validateGoogleToken(accessToken: string): Promise<{ email: string }> {
     try {
       const response = await axios.get(
-        `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`,
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
       );
       return { email: response.data.email };
     } catch (error) {
