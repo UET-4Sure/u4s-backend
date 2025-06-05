@@ -7,7 +7,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EncryptionService } from '../../auth/services/encryption.service';
 import { BanUserDto } from '../dto/ban-user.dto';
+import { CreateKycApplicationDto } from '../dto/create-kyc-application.dto';
+import { KycApplicationResponseDto } from '../dto/kyc-application-response.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
+import {
+  KycProfile,
+  VerificationOutcome,
+} from '../entities/kyc_profile.entity';
 import { User } from '../entities/user.entity';
 import { UserBan } from '../entities/user_ban.entity';
 
@@ -18,6 +24,8 @@ export class UserService {
     private userRepository: Repository<User>,
     @InjectRepository(UserBan)
     private userBanRepository: Repository<UserBan>,
+    @InjectRepository(KycProfile)
+    private kycProfileRepository: Repository<KycProfile>,
     private encryptionService: EncryptionService,
   ) {}
 
@@ -92,5 +100,76 @@ export class UserService {
     );
 
     return { privateKey };
+  }
+
+  async submitKycApplication(
+    walletAddress: string,
+    createKycApplicationDto: CreateKycApplicationDto,
+  ): Promise<KycProfile> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress: walletAddress.toLowerCase() },
+      relations: ['kycProfile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(
+        `User with wallet address ${walletAddress} not found`,
+      );
+    }
+
+    if (user.kycProfile) {
+      throw new Error('User already has a KYC application');
+    }
+
+    const kycProfile = this.kycProfileRepository.create({
+      user,
+      fullName: createKycApplicationDto.fullName,
+      documentType: createKycApplicationDto.documentType,
+      documentNumber: createKycApplicationDto.documentNumber,
+      documentFrontImageUrl: createKycApplicationDto.documentFrontImageUrl,
+      documentBackImageUrl: createKycApplicationDto.documentBackImageUrl,
+      verificationOutcome: VerificationOutcome.PENDING,
+    });
+
+    return this.kycProfileRepository.save(kycProfile);
+  }
+
+  async getKycApplications(
+    walletAddress: string,
+    status?: VerificationOutcome,
+  ): Promise<KycApplicationResponseDto[]> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress: walletAddress.toLowerCase() },
+      relations: ['kycProfile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(
+        `User with wallet address ${walletAddress} not found`,
+      );
+    }
+
+    const query = this.kycProfileRepository
+      .createQueryBuilder('kyc')
+      .where('kyc.user_id = :userId', { userId: user.id })
+      .orderBy('kyc.createdAt', 'DESC');
+
+    if (status) {
+      query.andWhere('kyc.verification_outcome = :status', { status });
+    }
+
+    const applications = await query.getMany();
+
+    return applications.map((app) => ({
+      id: app.id,
+      status: app.verificationOutcome,
+      documentType: app.documentType,
+      documentNumber: app.documentNumber,
+      documentFrontImageUrl: app.documentFrontImageUrl,
+      documentBackImageUrl: app.documentBackImageUrl,
+      submittedAt: app.createdAt,
+      reviewedAt: app.reviewedAt,
+      reviewNotes: app.reviewNotes,
+    }));
   }
 }
