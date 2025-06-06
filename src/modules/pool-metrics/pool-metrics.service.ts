@@ -48,10 +48,31 @@ export class PoolMetricsService {
       throw new NotFoundException(`No metrics found for pool ${poolId}`);
     }
 
+    // Calculate 24h metrics
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [volume24h, fees24h] = await Promise.all([
+      this.poolMetricsRepository
+        .createQueryBuilder('metrics')
+        .select('SUM(metrics.volumeUsd)', 'total')
+        .where('metrics.pool_id = :poolId', { poolId })
+        .andWhere('metrics.bucketStart >= :start', {
+          start: twentyFourHoursAgo,
+        })
+        .getRawOne(),
+      this.poolMetricsRepository
+        .createQueryBuilder('metrics')
+        .select('SUM(metrics.feeUsd)', 'total')
+        .where('metrics.pool_id = :poolId', { poolId })
+        .andWhere('metrics.bucketStart >= :start', {
+          start: twentyFourHoursAgo,
+        })
+        .getRawOne(),
+    ]);
+
     return {
       tvlUsd: latestMetrics.tvlUsd,
-      volume24hUsd: latestMetrics.volume24hUsd,
-      fees24hUsd: latestMetrics.fees24hUsd,
+      volume24hUsd: volume24h?.total || '0',
+      fees24hUsd: fees24h?.total || '0',
       aprForLps: latestMetrics.aprForLps,
       priceRatio: latestMetrics.priceRatio,
       liquidity: latestMetrics.liquidity,

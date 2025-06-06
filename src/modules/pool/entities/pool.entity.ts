@@ -8,10 +8,10 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { PoolMetrics } from 'src/modules/pool-metrics/entities/pool-metric.entity';
 import { Position } from 'src/modules/position/entities/position.entity';
 import { Swap } from 'src/modules/swap/entities/swap.entity';
 
-import { PoolMetrics } from '../../pool-metrics/entities/pool-metric.entity';
 import { Token } from '../../token/entities/token.entity';
 
 @Entity('pools')

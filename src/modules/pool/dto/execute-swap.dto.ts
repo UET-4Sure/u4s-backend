@@ -57,4 +57,20 @@ export class ExecuteSwapDto {
   @Type(() => Number)
   @IsNotEmpty()
   deadline: number;
+
+  @ApiProperty({
+    description: 'Price ratio between tokens after swap (tokenIn/tokenOut)',
+    example: '1800.50',
+  })
+  @IsNumberString()
+  @IsNotEmpty()
+  priceRatio: string;
+
+  @ApiProperty({
+    description: 'Transaction hash of the swap',
+    example: '0x1234567890123456789012345678901234567890123456789012345678901234',
+  })
+  @IsNotEmpty()
+  @Length(66, 66)
+  txHash: string;
 }

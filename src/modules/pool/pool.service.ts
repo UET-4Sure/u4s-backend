@@ -9,10 +9,12 @@ import { Repository } from 'typeorm';
 
 import { GetManyResponse, paginateData } from 'src/common/dtos';
 
+import { PoolMetrics } from '../pool-metrics/entities/pool-metric.entity';
 import { GetPositionEventsDto } from '../position/dto/get-position-events.dto';
 import { LiquidityEvent } from '../position/entities/liquidity-event.entity';
 import { Swap } from '../swap/entities/swap.entity';
 import { Token } from '../token/entities/token.entity';
+import { TokenPriceService } from '../token-price/token-price.service';
 
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';
@@ -32,6 +34,9 @@ export class PoolService {
     private liquidityEventRepository: Repository<LiquidityEvent>,
     @InjectRepository(Swap)
     private swapRepository: Repository<Swap>,
+    @InjectRepository(PoolMetrics)
+    private poolMetricRepository: Repository<PoolMetrics>,
+    private tokenPriceService: TokenPriceService,
   ) {}
 
   async create(createPoolDto: CreatePoolDto): Promise<Pool> {
@@ -244,40 +249,58 @@ export class PoolService {
   }
 
   async executeSwap(
-    poolAddress: string,
+    address: string,
     executeSwapDto: ExecuteSwapDto,
   ): Promise<Swap> {
-    // Find the pool
     const pool = await this.poolRepository.findOne({
-      where: { address: poolAddress.toLowerCase() },
+      where: { address },
       relations: ['token0', 'token1'],
     });
 
     if (!pool) {
-      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
+      throw new NotFoundException(`Pool with address ${address} not found`);
     }
 
-    // TODO: Implement the actual swap logic here
-    // This would typically involve:
-    // 1. Validating the swap parameters
-    // 2. Calculating the expected output amount
-    // 3. Executing the swap on-chain
-    // 4. Recording the swap details
+    // Get token prices
+    const tokenInPrice = await this.tokenPriceService.findLatest(
+      executeSwapDto.tokenInAddress,
+    );
+    const tokenOutPrice = await this.tokenPriceService.findLatest(
+      pool.token0.address === executeSwapDto.tokenInAddress
+        ? pool.token1.address
+        : pool.token0.address,
+    );
 
-    // Create swap record with the provided sender
-    const swap = this.swapRepository.create({
+    // Calculate metrics
+    const amountInUsd =
+      Number(executeSwapDto.amountIn) * Number(tokenInPrice.priceUsd);
+    const feeUsd = amountInUsd * (Number(pool.feeTier) / 10000); // Convert basis points to decimal
+
+    // Create swap record
+    const swap = await this.swapRepository.save({
       pool,
       sender: executeSwapDto.sender,
       recipient: executeSwapDto.recipient,
       tokenInAddress: executeSwapDto.tokenInAddress,
       amountIn: executeSwapDto.amountIn,
-      amountOut: '0', // This would be calculated based on the pool state
-      sqrtPriceX96: '0', // This would be updated based on the pool state
-      liquidity: '0', // This would be updated based on the pool state
-      tick: 0, // This would be updated based on the pool state
-      txHash: '0x', // This would be the actual transaction hash
+      amountOut: executeSwapDto.amountOutMinimum, // This should be the actual amount out
+      txHash: executeSwapDto.txHash,
+      timestamp: new Date(),
     });
 
-    return this.swapRepository.save(swap);
+    // Create pool metric
+    await this.poolMetricRepository.save({
+      pool,
+      volumeUsd: amountInUsd.toString(),
+      feeUsd: feeUsd.toString(),
+      tvlUsd: '0', // This should be calculated from pool's liquidity
+      aprForLps: '0', // This should be calculated from fees and TVL
+      priceRatio: executeSwapDto.priceRatio,
+      liquidity: '0', // This should be calculated from pool's liquidity
+      bucketStart: new Date(),
+      timestamp: new Date(),
+    });
+
+    return swap;
   }
 }

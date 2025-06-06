@@ -2,7 +2,6 @@
 
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -47,18 +46,9 @@ export class Swap {
   @Column('numeric', { precision: 38, scale: 18, name: 'amount_out' })
   amountOut: string;
 
-  @Column('numeric', { precision: 38, scale: 18, name: 'sqrt_price_x96' })
-  sqrtPriceX96: string;
-
-  @Column('numeric', { precision: 38, scale: 18 })
-  liquidity: string;
-
-  @Column({ type: 'int' })
-  tick: number;
-
   @Column({ type: 'varchar', length: 66, name: 'tx_hash' })
   txHash: string;
 
-  @CreateDateColumn({ name: 'timestamp' })
+  @Column({ type: 'timestamp' })
   timestamp: Date;
 }
