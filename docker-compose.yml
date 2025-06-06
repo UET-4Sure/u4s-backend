@@ -7,11 +7,7 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-      - MYSQL_DB_NAME=u4s
+      - DATABASE_URL=mysql://root:root@mysql:3306/u4s
     depends_on:
       - mysql
     networks:

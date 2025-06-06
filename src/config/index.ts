@@ -8,12 +8,8 @@ function loadConfig() {
       env: process.env.NODE_ENV || 'development',
       port: parseInt(process.env.PORT || '3000', 10),
     },
-    mysql: {
-      host: process.env.MYSQL_HOST || 'localhost',
-      port: parseInt(process.env.MYSQL_PORT || '3306', 10),
-      user: process.env.MYSQL_USER || 'root',
-      password: process.env.MYSQL_PASSWORD || '',
-      dbName: process.env.MYSQL_DB_NAME || 'u4s',
+    database: {
+      url: process.env.DATABASE_URL || 'mysql://root:root@localhost:3306/u4s',
     },
     auth: {
       jwt: {
