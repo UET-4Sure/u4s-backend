@@ -23,6 +23,13 @@ function loadConfig() {
         key: process.env.ENCRYPTION_KEY,
       },
     },
+    pinata: {
+      pinataJwt: process.env.PINATA_JWT,
+    },
+    chain: {
+      rpc_url: process.env.RPC_URL || '',
+    },
+    private_key: process.env.PRIVATE_KEY || '',
   };
 
   return config;
