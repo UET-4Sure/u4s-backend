@@ -212,8 +212,8 @@ export class PositionService {
     const currentTvlUsd = latestMetric?.tvlUsd || '0';
     const tvlUsd =
       createLiquidityEventDto.type === LiquidityEventType.MINT
-        ? (Number(currentTvlUsd) + Number(eventTvlUsd)).toString()
-        : (Number(currentTvlUsd) - Number(eventTvlUsd)).toString();
+        ? (Number(currentTvlUsd) + Number(eventTvlUsd)).toFixed(18)
+        : Math.max(0, Number(currentTvlUsd) - Number(eventTvlUsd)).toFixed(18);
 
     // Use latest price ratio if available, otherwise calculate from token prices
     const priceRatio =
@@ -228,7 +228,10 @@ export class PositionService {
       tvlUsd,
       aprForLps: '0', // This should be calculated from fees and TVL
       priceRatio,
-      liquidity: createLiquidityEventDto.liquidityAmount,
+      liquidity:
+        createLiquidityEventDto.type === LiquidityEventType.MINT
+          ? createLiquidityEventDto.liquidityAmount
+          : `-${createLiquidityEventDto.liquidityAmount}`,
       bucketStart: new Date(),
       timestamp: new Date(),
     });
@@ -236,3 +239,4 @@ export class PositionService {
     return savedEvent;
   }
 }
+

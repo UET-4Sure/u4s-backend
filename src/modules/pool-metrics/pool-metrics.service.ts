@@ -133,7 +133,6 @@ export class PoolMetricsService {
       .orderBy('bucketStart', 'ASC')
       .limit(limit);
 
-
     // Get raw results and count separately
     const [rawRows, total] = await Promise.all([
       qb.getRawMany(),
@@ -207,13 +206,11 @@ export class PoolMetricsService {
       .orderBy('bucketStart', 'ASC')
       .limit(limit);
 
-
     // Get raw results and count separately
     const [rawRows, total] = await Promise.all([
       qb.getRawMany(),
       qb.getCount(),
     ]);
-
 
     // Map raw rows into DTO shape
     const data: PoolFeesMetricDto[] = rawRows.map((row) => ({
@@ -389,17 +386,40 @@ export class PoolMetricsService {
     const interval = query.interval ?? TimeInterval.DAY;
     const limit = query.limit ?? 24;
 
+    // Get date format based on interval
+    let dateFormat: string;
+    switch (interval) {
+      case TimeInterval.SECOND:
+        dateFormat = '%Y-%m-%d %H:%i:%s';
+        break;
+      case TimeInterval.HOUR:
+        dateFormat = '%Y-%m-%d %H:00:00';
+        break;
+      case TimeInterval.DAY:
+        dateFormat = '%Y-%m-%d 00:00:00';
+        break;
+      case TimeInterval.WEEK:
+        dateFormat = '%Y-%u 00:00:00'; // %u gives week number
+        break;
+      case TimeInterval.MONTH:
+        dateFormat = '%Y-%m-01 00:00:00';
+        break;
+      case TimeInterval.YEAR:
+        dateFormat = '%Y-01-01 00:00:00';
+        break;
+      default:
+        dateFormat = '%Y-%m-%d 00:00:00';
+    }
+
     // 3) Build the raw‐SQL aggregation
     const qb = this.poolMetricsRepository
       .createQueryBuilder('metrics')
       .select([
-        `DATE_FORMAT(metrics.bucketStart, '%Y-%m-%d %H:00:00') AS bucketStart`,
-        `CAST(MAX(metrics.liquidity) AS CHAR) AS liquidity`,
+        `DATE_FORMAT(metrics.bucketStart, '${dateFormat}') AS bucketStart`,
+        `CAST(SUM(metrics.liquidity) AS CHAR) AS liquidity`,
       ])
       .where('metrics.pool_id = :poolId', { poolId: pool.id })
-      .andWhere('metrics.bucketStart <= NOW()')
-      .andWhere('metrics.bucketStart > DATE_SUB(NOW(), INTERVAL 1 DAY)')
-      .groupBy('DATE_FORMAT(metrics.bucketStart, "%Y-%m-%d %H:00:00")')
+      .groupBy(`DATE_FORMAT(metrics.bucketStart, '${dateFormat}')`)
       .orderBy('bucketStart', 'ASC')
       .limit(limit);
 
@@ -409,11 +429,18 @@ export class PoolMetricsService {
       qb.getCount(),
     ]);
 
-    // Map raw rows into DTO shape
-    const data: PoolLiquidityMetricDto[] = rawRows.map((row) => ({
-      bucketStart: new Date(row.bucketStart),
-      liquidity: row.liquidity,
-    }));
+    // Map raw rows into DTO shape and calculate cumulative liquidity
+    let cumulativeLiquidity = '0';
+    const data: PoolLiquidityMetricDto[] = rawRows.map((row) => {
+      // Add the net liquidity change for this period to the cumulative total
+      cumulativeLiquidity = (
+        Number(cumulativeLiquidity) + Number(row.liquidity)
+      ).toString();
+      return {
+        bucketStart: new Date(row.bucketStart),
+        liquidity: cumulativeLiquidity,
+      };
+    });
 
     return {
       data,

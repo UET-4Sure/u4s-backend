@@ -17,22 +17,22 @@ export class PoolMetrics {
   @JoinColumn({ name: 'pool_id' })
   pool: Pool;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
+  @Column({ type: 'decimal', precision: 65, scale: 18 })
   volumeUsd: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
+  @Column({ type: 'decimal', precision: 65, scale: 18 })
   feeUsd: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
+  @Column({ type: 'decimal', precision: 65, scale: 18 })
   tvlUsd: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
+  @Column({ type: 'decimal', precision: 65, scale: 18 })
   aprForLps: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
+  @Column({ type: 'decimal', precision: 65, scale: 18 })
   priceRatio: string;
 
-  @Column({ type: 'numeric', precision: 38, scale: 18 })
+  @Column({ type: 'decimal', precision: 65, scale: 18 })
   liquidity: string;
 
   @Column({ type: 'timestamp' })
