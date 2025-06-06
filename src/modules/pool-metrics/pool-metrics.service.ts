@@ -28,24 +28,23 @@ export class PoolMetricsService {
     private poolRepository: Repository<Pool>,
   ) {}
 
-  async getOverview(poolId: string): Promise<PoolMetricsOverviewDto> {
-    // Check if pool exists
+  async getOverview(poolAddress: string): Promise<PoolMetricsOverviewDto> {
     const pool = await this.poolRepository.findOne({
-      where: { id: poolId },
+      where: { address: poolAddress.toLowerCase() },
     });
 
     if (!pool) {
-      throw new NotFoundException(`Pool with ID ${poolId} not found`);
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
     }
 
     // Get latest metrics
     const latestMetrics = await this.poolMetricsRepository.findOne({
-      where: { pool: { id: poolId } },
-      order: { bucketStart: 'DESC' },
+      where: { pool: { id: pool.id } },
+      order: { timestamp: 'DESC' },
     });
 
     if (!latestMetrics) {
-      throw new NotFoundException(`No metrics found for pool ${poolId}`);
+      throw new NotFoundException('Pool metrics not found');
     }
 
     // Calculate 24h metrics
@@ -54,16 +53,16 @@ export class PoolMetricsService {
       this.poolMetricsRepository
         .createQueryBuilder('metrics')
         .select('SUM(metrics.volumeUsd)', 'total')
-        .where('metrics.pool_id = :poolId', { poolId })
-        .andWhere('metrics.bucketStart >= :start', {
+        .where('metrics.pool_id = :poolId', { poolId: pool.id })
+        .andWhere('metrics.timestamp >= :start', {
           start: twentyFourHoursAgo,
         })
         .getRawOne(),
       this.poolMetricsRepository
         .createQueryBuilder('metrics')
         .select('SUM(metrics.feeUsd)', 'total')
-        .where('metrics.pool_id = :poolId', { poolId })
-        .andWhere('metrics.bucketStart >= :start', {
+        .where('metrics.pool_id = :poolId', { poolId: pool.id })
+        .andWhere('metrics.timestamp >= :start', {
           start: twentyFourHoursAgo,
         })
         .getRawOne(),
@@ -76,46 +75,68 @@ export class PoolMetricsService {
       aprForLps: latestMetrics.aprForLps,
       priceRatio: latestMetrics.priceRatio,
       liquidity: latestMetrics.liquidity,
-      lastUpdated: latestMetrics.bucketStart,
+      lastUpdated: latestMetrics.timestamp,
     };
   }
 
   async getVolumeMetrics(
-    poolId: string,
+    poolAddress: string,
     query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolVolumeMetricDto>> {
     // 1) Check if pool exists
     const pool = await this.poolRepository.findOne({
-      where: { id: poolId },
+      where: { address: poolAddress.toLowerCase() },
     });
+    console.log('Pool lookup result:', pool);
+
     if (!pool) {
-      throw new NotFoundException(`Pool with ID ${poolId} not found`);
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
     }
 
     // 2) Default to DAY / 24 if not provided
     const interval = query.interval ?? TimeInterval.DAY;
     const limit = query.limit ?? 24;
 
-    // 3) Build the raw‐SQL aggregation using date_trunc on the actual column name 'bucket_start'
+    // Get date format based on interval
+    let dateFormat: string;
+    switch (interval) {
+      case TimeInterval.SECOND:
+        dateFormat = '%Y-%m-%d %H:%i:%s';
+        break;
+      case TimeInterval.HOUR:
+        dateFormat = '%Y-%m-%d %H:00:00';
+        break;
+      case TimeInterval.DAY:
+        dateFormat = '%Y-%m-%d 00:00:00';
+        break;
+      case TimeInterval.WEEK:
+        dateFormat = '%Y-%u 00:00:00'; // %u gives week number
+        break;
+      case TimeInterval.MONTH:
+        dateFormat = '%Y-%m-01 00:00:00';
+        break;
+      case TimeInterval.YEAR:
+        dateFormat = '%Y-01-01 00:00:00';
+        break;
+      default:
+        dateFormat = '%Y-%m-%d 00:00:00';
+    }
+
+    // 3) Build the raw‐SQL aggregation
     const qb = this.poolMetricsRepository
       .createQueryBuilder('metrics')
       .select([
-        `date_trunc('${interval}', metrics.bucket_start)     AS "bucketStart"`,
-        `SUM(metrics.volume24hUsd)    ::TEXT                  AS "volume24hUsd"`,
-        `SUM(metrics.fees24hUsd)      ::TEXT                  AS "fees24hUsd"`,
-        `MAX(metrics.tvlUsd)          ::TEXT                  AS "tvlUsd"`,
-        `MAX(metrics.priceRatio)      ::TEXT                  AS "priceRatio"`,
-        `MAX(metrics.liquidity)       ::TEXT                  AS "liquidity"`,
-        `MAX(metrics.aprForLps)       ::TEXT                  AS "aprForLps"`,
+        `DATE_FORMAT(metrics.bucketStart, '${dateFormat}') AS bucketStart`,
+        `CAST(SUM(metrics.volumeUsd) AS CHAR) AS volumeUsd`,
       ])
-      .where('metrics.pool_id = :poolId', { poolId })
-      .andWhere(`metrics.bucket_start <= date_trunc('${interval}', now())`)
-      .andWhere(
-        `metrics.bucket_start >  date_trunc('${interval}', now()) - INTERVAL '${this.getIntervalValue(interval)}'`,
-      )
-      .groupBy(`date_trunc('${interval}', metrics.bucket_start)`)
-      .orderBy(`date_trunc('${interval}', metrics.bucket_start)`, 'ASC')
+      .where('metrics.pool_id = :poolId', { poolId: pool.id })
+      .groupBy(`DATE_FORMAT(metrics.bucketStart, '${dateFormat}')`)
+      .orderBy('bucketStart', 'ASC')
       .limit(limit);
+
+    // Log the generated SQL query
+    console.log('Generated SQL:', qb.getSql());
+    console.log('Query parameters:', qb.getParameters());
 
     // Get raw results and count separately
     const [rawRows, total] = await Promise.all([
@@ -123,15 +144,12 @@ export class PoolMetricsService {
       qb.getCount(),
     ]);
 
-    // 8) Map raw rows into your DTO shape
+    console.log('Query results:', rawRows);
+
+    // Map raw rows into DTO shape
     const data: PoolVolumeMetricDto[] = rawRows.map((row) => ({
       bucketStart: new Date(row.bucketStart),
-      volume24hUsd: row.volume24hUsd,
-      fees24hUsd: row.fees24hUsd,
-      tvlUsd: row.tvlUsd,
-      priceRatio: row.priceRatio,
-      liquidity: row.liquidity,
-      aprForLps: row.aprForLps,
+      volumeUsd: row.volumeUsd,
     }));
 
     return {
@@ -142,36 +160,63 @@ export class PoolMetricsService {
   }
 
   async getFeesMetrics(
-    poolId: string,
+    poolAddress: string,
     query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolFeesMetricDto>> {
     // 1) Check if pool exists
     const pool = await this.poolRepository.findOne({
-      where: { id: poolId },
+      where: { address: poolAddress.toLowerCase() },
     });
+    console.log('Pool lookup result:', pool);
+
     if (!pool) {
-      throw new NotFoundException(`Pool with ID ${poolId} not found`);
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
     }
 
     // 2) Default to DAY / 24 if not provided
     const interval = query.interval ?? TimeInterval.DAY;
     const limit = query.limit ?? 24;
 
+    // Get date format based on interval
+    let dateFormat: string;
+    switch (interval) {
+      case TimeInterval.SECOND:
+        dateFormat = '%Y-%m-%d %H:%i:%s';
+        break;
+      case TimeInterval.HOUR:
+        dateFormat = '%Y-%m-%d %H:00:00';
+        break;
+      case TimeInterval.DAY:
+        dateFormat = '%Y-%m-%d 00:00:00';
+        break;
+      case TimeInterval.WEEK:
+        dateFormat = '%Y-%u 00:00:00'; // %u gives week number
+        break;
+      case TimeInterval.MONTH:
+        dateFormat = '%Y-%m-01 00:00:00';
+        break;
+      case TimeInterval.YEAR:
+        dateFormat = '%Y-01-01 00:00:00';
+        break;
+      default:
+        dateFormat = '%Y-%m-%d 00:00:00';
+    }
+
     // 3) Build the raw‐SQL aggregation
     const qb = this.poolMetricsRepository
       .createQueryBuilder('metrics')
       .select([
-        `date_trunc('${interval}', metrics.bucket_start)     AS "bucketStart"`,
-        `SUM(metrics.fees24hUsd)      ::TEXT                  AS "fees24hUsd"`,
+        `DATE_FORMAT(metrics.bucketStart, '${dateFormat}') AS bucketStart`,
+        `CAST(SUM(metrics.feeUsd) AS CHAR) AS feesUsd`,
       ])
-      .where('metrics.pool_id = :poolId', { poolId })
-      .andWhere(`metrics.bucket_start <= date_trunc('${interval}', now())`)
-      .andWhere(
-        `metrics.bucket_start >  date_trunc('${interval}', now()) - INTERVAL '${this.getIntervalValue(interval)}'`,
-      )
-      .groupBy(`date_trunc('${interval}', metrics.bucket_start)`)
-      .orderBy(`date_trunc('${interval}', metrics.bucket_start)`, 'ASC')
+      .where('metrics.pool_id = :poolId', { poolId: pool.id })
+      .groupBy(`DATE_FORMAT(metrics.bucketStart, '${dateFormat}')`)
+      .orderBy('bucketStart', 'ASC')
       .limit(limit);
+
+    // Log the generated SQL query
+    console.log('Generated SQL:', qb.getSql());
+    console.log('Query parameters:', qb.getParameters());
 
     // Get raw results and count separately
     const [rawRows, total] = await Promise.all([
@@ -179,10 +224,12 @@ export class PoolMetricsService {
       qb.getCount(),
     ]);
 
+    console.log('Query results:', rawRows);
+
     // Map raw rows into DTO shape
     const data: PoolFeesMetricDto[] = rawRows.map((row) => ({
       bucketStart: new Date(row.bucketStart),
-      fees24hUsd: row.fees24hUsd,
+      feesUsd: row.feesUsd,
     }));
 
     return {
@@ -213,12 +260,12 @@ export class PoolMetricsService {
     // Parse timestamp or use current time
     const targetTime = timestamp ? new Date(timestamp) : new Date();
 
-    // Build query to get the latest TVL for each pool before the target time
+    // First try to get TVL at the requested timestamp
     const qb = this.poolMetricsRepository
       .createQueryBuilder('metrics')
       .select([
-        `SUM(metrics.tvlUsd) ::TEXT AS "totalTvlUsd"`,
-        `MAX(metrics.bucketStart) AS "timestamp"`,
+        `CAST(SUM(metrics.tvlUsd) AS CHAR) AS totalTvlUsd`,
+        `MAX(metrics.bucketStart) AS timestamp`,
       ])
       .where('metrics.bucketStart <= :targetTime', { targetTime })
       .andWhere((qb) => {
@@ -234,16 +281,42 @@ export class PoolMetricsService {
 
     const result = await qb.getRawOne();
 
-    if (!result) {
+    // If no data found at requested timestamp, get the earliest TVL data
+    if (!result || !result.totalTvlUsd) {
+      const earliestQb = this.poolMetricsRepository
+        .createQueryBuilder('metrics')
+        .select([
+          `CAST(SUM(metrics.tvlUsd) AS CHAR) AS totalTvlUsd`,
+          `MIN(metrics.bucketStart) AS timestamp`,
+        ])
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('MIN(m2.bucketStart)')
+            .from(PoolMetrics, 'm2')
+            .where('m2.pool_id = metrics.pool_id')
+            .getQuery();
+          return 'metrics.bucketStart = ' + subQuery;
+        });
+
+      const earliestResult = await earliestQb.getRawOne();
+
+      if (!earliestResult || !earliestResult.totalTvlUsd) {
+        return {
+          totalTvlUsd: '0',
+          timestamp: targetTime.toISOString(),
+        };
+      }
+
       return {
-        totalTvlUsd: '0',
-        timestamp: targetTime,
+        totalTvlUsd: earliestResult.totalTvlUsd,
+        timestamp: new Date(earliestResult.timestamp).toISOString(),
       };
     }
 
     return {
       totalTvlUsd: result.totalTvlUsd,
-      timestamp: new Date(result.timestamp),
+      timestamp: new Date(result.timestamp).toISOString(),
     };
   }
 
@@ -251,12 +324,12 @@ export class PoolMetricsService {
     // Parse asOf timestamp or use current time
     const targetTime = asOf ? new Date(asOf) : new Date();
 
-    // Build query to get the latest 24h volume for each pool at the target time
+    // First try to get volume at the requested timestamp
     const qb = this.poolMetricsRepository
       .createQueryBuilder('metrics')
       .select([
-        `SUM(metrics.volume24hUsd) ::TEXT AS "totalVolume24hUsd"`,
-        `MAX(metrics.bucketStart) AS "asOf"`,
+        `CAST(SUM(metrics.volumeUsd) AS CHAR) AS totalVolumeUsd`,
+        `MAX(metrics.bucketStart) AS asOf`,
       ])
       .where('metrics.bucketStart <= :targetTime', { targetTime })
       .andWhere((qb) => {
@@ -272,29 +345,55 @@ export class PoolMetricsService {
 
     const result = await qb.getRawOne();
 
-    if (!result) {
+    // If no data found at requested timestamp, get the earliest volume data
+    if (!result || !result.totalVolumeUsd) {
+      const earliestQb = this.poolMetricsRepository
+        .createQueryBuilder('metrics')
+        .select([
+          `CAST(SUM(metrics.volumeUsd) AS CHAR) AS totalVolumeUsd`,
+          `MIN(metrics.bucketStart) AS asOf`,
+        ])
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('MIN(m2.bucketStart)')
+            .from(PoolMetrics, 'm2')
+            .where('m2.pool_id = metrics.pool_id')
+            .getQuery();
+          return 'metrics.bucketStart = ' + subQuery;
+        });
+
+      const earliestResult = await earliestQb.getRawOne();
+
+      if (!earliestResult || !earliestResult.totalVolumeUsd) {
+        return {
+          totalVolumeUsd: '0',
+          asOf: targetTime.toISOString(),
+        };
+      }
+
       return {
-        totalVolume24hUsd: '0',
-        asOf: targetTime,
+        totalVolumeUsd: earliestResult.totalVolumeUsd,
+        asOf: new Date(earliestResult.asOf).toISOString(),
       };
     }
 
     return {
-      totalVolume24hUsd: result.totalVolume24hUsd,
-      asOf: new Date(result.asOf),
+      totalVolumeUsd: result.totalVolumeUsd,
+      asOf: new Date(result.asOf).toISOString(),
     };
   }
 
   async getLiquidityMetrics(
-    poolId: string,
+    poolAddress: string,
     query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolLiquidityMetricDto>> {
     // 1) Check if pool exists
     const pool = await this.poolRepository.findOne({
-      where: { id: poolId },
+      where: { address: poolAddress.toLowerCase() },
     });
     if (!pool) {
-      throw new NotFoundException(`Pool with ID ${poolId} not found`);
+      throw new NotFoundException(`Pool with address ${poolAddress} not found`);
     }
 
     // 2) Default to DAY / 24 if not provided
@@ -305,16 +404,14 @@ export class PoolMetricsService {
     const qb = this.poolMetricsRepository
       .createQueryBuilder('metrics')
       .select([
-        `date_trunc('${interval}', metrics.bucket_start)     AS "bucketStart"`,
-        `MAX(metrics.liquidity)       ::TEXT                  AS "liquidity"`,
+        `DATE_FORMAT(metrics.bucketStart, '%Y-%m-%d %H:00:00') AS bucketStart`,
+        `CAST(MAX(metrics.liquidity) AS CHAR) AS liquidity`,
       ])
-      .where('metrics.pool_id = :poolId', { poolId })
-      .andWhere(`metrics.bucket_start <= date_trunc('${interval}', now())`)
-      .andWhere(
-        `metrics.bucket_start >  date_trunc('${interval}', now()) - INTERVAL '${this.getIntervalValue(interval)}'`,
-      )
-      .groupBy(`date_trunc('${interval}', metrics.bucket_start)`)
-      .orderBy(`date_trunc('${interval}', metrics.bucket_start)`, 'ASC')
+      .where('metrics.pool_id = :poolId', { poolId: pool.id })
+      .andWhere('metrics.bucketStart <= NOW()')
+      .andWhere('metrics.bucketStart > DATE_SUB(NOW(), INTERVAL 1 DAY)')
+      .groupBy('DATE_FORMAT(metrics.bucketStart, "%Y-%m-%d %H:00:00")')
+      .orderBy('bucketStart', 'ASC')
       .limit(limit);
 
     // Get raw results and count separately

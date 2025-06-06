@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export enum TimeInterval {
+  SECOND = 'second',
   HOUR = 'hour',
   DAY = 'day',
   WEEK = 'week',

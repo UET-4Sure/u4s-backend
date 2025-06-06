@@ -4,6 +4,8 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetManyResponse } from 'src/common/dtos';
 
 import { GetPoolVolumeMetricsDto } from './dto/get-pool-volume-metrics.dto';
+import { GetTotalTvlDto } from './dto/get-total-tvl.dto';
+import { GetTotalVolumeDto } from './dto/get-total-volume.dto';
 import { PoolFeesMetricDto } from './dto/pool-fees-metric.dto';
 import { PoolLiquidityMetricDto } from './dto/pool-liquidity-metric.dto';
 import { PoolMetricsOverviewDto } from './dto/pool-metrics-overview.dto';
@@ -12,12 +14,12 @@ import { TotalTvlMetricDto } from './dto/total-tvl-metric.dto';
 import { TotalVolumeMetricDto } from './dto/total-volume-metric.dto';
 import { PoolMetricsService } from './pool-metrics.service';
 
-@ApiTags('pool-metrics')
+@ApiTags('pools')
 @Controller('pools')
 export class PoolMetricsController {
   constructor(private readonly poolMetricsService: PoolMetricsService) {}
 
-  @Get(':poolId/metrics/overview')
+  @Get(':poolAddress/metrics/overview')
   @ApiOperation({ summary: 'Get pool metrics overview' })
   @ApiResponse({
     status: 200,
@@ -26,15 +28,15 @@ export class PoolMetricsController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Pool or metrics not found',
+    description: 'Pool not found',
   })
   getOverview(
-    @Param('poolId') poolId: string,
+    @Param('poolAddress') poolAddress: string,
   ): Promise<PoolMetricsOverviewDto> {
-    return this.poolMetricsService.getOverview(poolId);
+    return this.poolMetricsService.getOverview(poolAddress);
   }
 
-  @Get(':poolId/metrics/volume')
+  @Get(':poolAddress/metrics/volume')
   @ApiOperation({ summary: 'Get pool volume metrics' })
   @ApiResponse({
     status: 200,
@@ -46,13 +48,13 @@ export class PoolMetricsController {
     description: 'Pool not found',
   })
   getVolumeMetrics(
-    @Param('poolId') poolId: string,
+    @Param('poolAddress') poolAddress: string,
     @Query() query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolVolumeMetricDto>> {
-    return this.poolMetricsService.getVolumeMetrics(poolId, query);
+    return this.poolMetricsService.getVolumeMetrics(poolAddress, query);
   }
 
-  @Get(':poolId/metrics/fees')
+  @Get(':poolAddress/metrics/fees')
   @ApiOperation({ summary: 'Get pool fees metrics' })
   @ApiResponse({
     status: 200,
@@ -64,10 +66,10 @@ export class PoolMetricsController {
     description: 'Pool not found',
   })
   getFeesMetrics(
-    @Param('poolId') poolId: string,
+    @Param('poolAddress') poolAddress: string,
     @Query() query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolFeesMetricDto>> {
-    return this.poolMetricsService.getFeesMetrics(poolId, query);
+    return this.poolMetricsService.getFeesMetrics(poolAddress, query);
   }
 
   @Get('metrics/pools/total-tvl')
@@ -77,26 +79,24 @@ export class PoolMetricsController {
     description: 'Return total TVL at the specified timestamp',
     type: TotalTvlMetricDto,
   })
-  getTotalTvl(
-    @Query('timestamp') timestamp?: string,
-  ): Promise<TotalTvlMetricDto> {
-    return this.poolMetricsService.getTotalTvl(timestamp);
+  getTotalTvl(@Query() query: GetTotalTvlDto): Promise<TotalTvlMetricDto> {
+    return this.poolMetricsService.getTotalTvl(query.timestamp);
   }
 
-  @Get('metrics/pools/total-volume24h')
-  @ApiOperation({ summary: 'Get total 24h volume across all pools' })
+  @Get('metrics/pools/total-volume')
+  @ApiOperation({ summary: 'Get total volume across all pools' })
   @ApiResponse({
     status: 200,
-    description: 'Return total 24h volume at the specified timestamp',
+    description: 'Return total volume at the specified timestamp',
     type: TotalVolumeMetricDto,
   })
-  getTotalVolume24h(
-    @Query('asOf') asOf?: string,
+  getTotalVolume(
+    @Query() query: GetTotalVolumeDto,
   ): Promise<TotalVolumeMetricDto> {
-    return this.poolMetricsService.getTotalVolume24h(asOf);
+    return this.poolMetricsService.getTotalVolume24h(query.asOf);
   }
 
-  @Get(':poolId/metrics/liquidity')
+  @Get(':poolAddress/metrics/liquidity')
   @ApiOperation({ summary: 'Get pool liquidity metrics' })
   @ApiResponse({
     status: 200,
@@ -108,9 +108,9 @@ export class PoolMetricsController {
     description: 'Pool not found',
   })
   getLiquidityMetrics(
-    @Param('poolId') poolId: string,
+    @Param('poolAddress') poolAddress: string,
     @Query() query: GetPoolVolumeMetricsDto,
   ): Promise<GetManyResponse<PoolLiquidityMetricDto>> {
-    return this.poolMetricsService.getLiquidityMetrics(poolId, query);
+    return this.poolMetricsService.getLiquidityMetrics(poolAddress, query);
   }
 }

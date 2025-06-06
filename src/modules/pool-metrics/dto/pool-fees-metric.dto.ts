@@ -3,13 +3,13 @@ import { ApiProperty } from '@nestjs/swagger';
 export class PoolFeesMetricDto {
   @ApiProperty({
     description: 'Start time of the bucket',
-    example: '2024-03-21T00:00:00Z',
+    example: '2024-03-20T00:00:00.000Z',
   })
   bucketStart: Date;
 
   @ApiProperty({
-    description: '24-hour fees in USD',
-    example: '1000.00',
+    description: 'Fees in USD for this time bucket',
+    example: '100.00',
   })
-  fees24hUsd: string;
+  feesUsd: string;
 }
