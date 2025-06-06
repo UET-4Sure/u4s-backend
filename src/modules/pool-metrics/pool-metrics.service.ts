@@ -87,7 +87,6 @@ export class PoolMetricsService {
     const pool = await this.poolRepository.findOne({
       where: { address: poolAddress.toLowerCase() },
     });
-    console.log('Pool lookup result:', pool);
 
     if (!pool) {
       throw new NotFoundException(`Pool with address ${poolAddress} not found`);
@@ -134,17 +133,12 @@ export class PoolMetricsService {
       .orderBy('bucketStart', 'ASC')
       .limit(limit);
 
-    // Log the generated SQL query
-    console.log('Generated SQL:', qb.getSql());
-    console.log('Query parameters:', qb.getParameters());
 
     // Get raw results and count separately
     const [rawRows, total] = await Promise.all([
       qb.getRawMany(),
       qb.getCount(),
     ]);
-
-    console.log('Query results:', rawRows);
 
     // Map raw rows into DTO shape
     const data: PoolVolumeMetricDto[] = rawRows.map((row) => ({
@@ -167,7 +161,6 @@ export class PoolMetricsService {
     const pool = await this.poolRepository.findOne({
       where: { address: poolAddress.toLowerCase() },
     });
-    console.log('Pool lookup result:', pool);
 
     if (!pool) {
       throw new NotFoundException(`Pool with address ${poolAddress} not found`);
@@ -214,9 +207,6 @@ export class PoolMetricsService {
       .orderBy('bucketStart', 'ASC')
       .limit(limit);
 
-    // Log the generated SQL query
-    console.log('Generated SQL:', qb.getSql());
-    console.log('Query parameters:', qb.getParameters());
 
     // Get raw results and count separately
     const [rawRows, total] = await Promise.all([
@@ -224,7 +214,6 @@ export class PoolMetricsService {
       qb.getCount(),
     ]);
 
-    console.log('Query results:', rawRows);
 
     // Map raw rows into DTO shape
     const data: PoolFeesMetricDto[] = rawRows.map((row) => ({
