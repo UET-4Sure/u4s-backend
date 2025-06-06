@@ -23,6 +23,9 @@ function loadConfig() {
         key: process.env.ENCRYPTION_KEY,
       },
     },
+    pinata: {
+      pinataJwt: process.env.PINATA_JWT,
+    },
   };
 
   return config;
