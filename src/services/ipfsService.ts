@@ -194,7 +194,7 @@ export async function uploadSBTMetadata() {
   };
 
   const tokenURI = await ipfsService.createTokenURI(metadata);
-  console.log('Token URI created successfully');
+  console.log('Token URI created successfully tokenURI:', tokenURI);
   return tokenURI;
 }
 
