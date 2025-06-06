@@ -239,4 +239,3 @@ export class PositionService {
     return savedEvent;
   }
 }
-
