@@ -26,6 +26,10 @@ function loadConfig() {
     pinata: {
       pinataJwt: process.env.PINATA_JWT,
     },
+    chain: {
+      rpc_url: process.env.RPC_URL || '',
+    },
+    private_key: process.env.PRIVATE_KEY || '',
   };
 
   return config;

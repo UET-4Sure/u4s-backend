@@ -27,4 +27,4 @@ async function runTest() {
   await verifyIpfs(tokenURI);
 }
 
-runTest();
+// runTest();

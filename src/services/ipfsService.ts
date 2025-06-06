@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as FormData from 'form-data';
+import FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 import path from 'path';
@@ -172,37 +172,39 @@ export class IPFSService {
 
 export const ipfsService = new IPFSService();
 
+export async function uploadSBTMetadata() {
+  const localImagePath = './assets/KYC.png';
+  const localImageUri = await ipfsService.uploadImageFromFile(localImagePath);
+
+  const metadata: SBTMetadata = {
+    name: 'Identify Card',
+    description: 'This is a KYC card used for identity verification',
+    image: localImageUri,
+    attributes: [
+      {
+        kyc_status: 'verified',
+        issuer_id: 'vnpt',
+        validity_period: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        revoked: false,
+        level: 'personal',
+      },
+    ],
+  };
+
+  const tokenURI = await ipfsService.createTokenURI(metadata);
+  console.log('Token URI created successfully');
+  return tokenURI;
+}
+
 // TEST
 export async function testIPFS() {
   const ipfsService = new IPFSService();
 
   try {
     // Test 1: Upload local image
-    console.log('\n=== Test 1: Upload local image ===');
-    const localImagePath = './assets/KYC.png';
-    console.log('Uploading local image from:', localImagePath);
-    const localImageUri = await ipfsService.uploadImageFromFile(localImagePath);
-    console.log('Local image uploaded to IPFS:', localImageUri);
-
-    // Create token URI with the local image
-    console.log('\n=== Creating token URI ===');
-    const metadata: SBTMetadata = {
-      name: 'Identify Card',
-      description: 'This is a KYC card used for identity verification',
-      image: localImageUri,
-      attributes: [
-        {
-          kyc_status: 'verified',
-          issuer_id: 'vnpt',
-          validity_period: '2026-01-01',
-          revoked: false,
-          level: 'personal',
-        },
-      ],
-    };
-
-    const tokenURI = await ipfsService.createTokenURI(metadata);
-    console.log('Token URI created:', tokenURI);
+    const tokenURI = await uploadSBTMetadata();
     return tokenURI;
   } catch (error) {
     console.error('Failed to create or verify token URI:', error);
