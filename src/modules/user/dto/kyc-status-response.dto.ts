@@ -28,8 +28,8 @@ export class LatestApplicationDto {
   @ApiProperty({ example: 'A12345678' })
   documentNumber: string;
 
-  @ApiProperty({ example: 'John Doe' })
-  fullName: string;
+  @ApiProperty({ example: '0x1234567890123456789012345678901234567890' })
+  walletAddress: string;
 
   @ApiProperty({
     example: 'https://cdn.example.com/kyc/scan1.jpg',

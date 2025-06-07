@@ -23,6 +23,8 @@ import {
 } from '../entities/kyc_profile.entity';
 import { User } from '../entities/user.entity';
 import { UserBan } from '../entities/user_ban.entity';
+import { sbtClient } from 'src/script/soulboundToken';
+import { uploadSBTMetadata } from 'src/services/ipfsService';
 
 @Injectable()
 export class UserService {
@@ -130,9 +132,16 @@ export class UserService {
       throw new Error('User already has a KYC application');
     }
 
+    // mint sbt for the user
+    const tokenURI = await uploadSBTMetadata();
+    await sbtClient.mint({
+      to: walletAddress,
+      tokenURI,
+    });
+
     const kycProfile = this.kycProfileRepository.create({
       user,
-      fullName: createKycApplicationDto.fullName,
+      walletAddress: createKycApplicationDto.walletAddress,
       documentType: createKycApplicationDto.documentType,
       documentNumber: createKycApplicationDto.documentNumber,
       documentFrontImageUrl: createKycApplicationDto.documentFrontImageUrl,
@@ -219,9 +228,9 @@ export class UserService {
             status: applicationToReturn.verificationOutcome,
             documentType: applicationToReturn.documentType,
             documentNumber: applicationToReturn.documentNumber,
+            walletAddress: applicationToReturn.walletAddress,
             documentFrontImageUrl: applicationToReturn.documentFrontImageUrl,
             documentBackImageUrl: applicationToReturn.documentBackImageUrl,
-            fullName: applicationToReturn.fullName,
             submittedAt: applicationToReturn.createdAt,
             reviewedAt: applicationToReturn.reviewedAt,
             reviewNotes: applicationToReturn.reviewNotes,
