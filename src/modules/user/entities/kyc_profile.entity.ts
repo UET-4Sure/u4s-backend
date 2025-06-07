@@ -33,8 +33,8 @@ export class KycProfile {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'varchar', length: 255, name: 'full_name' })
-  fullName: string;
+  @Column({ type: 'varchar', length: 255, name: 'wallet_address' })
+  walletAddress: string;
 
   @Column({
     type: 'enum',

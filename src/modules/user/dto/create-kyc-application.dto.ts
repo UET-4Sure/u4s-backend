@@ -39,10 +39,10 @@ export class CreateKycApplicationDto {
   documentBackImageUrl: string;
 
   @ApiProperty({
-    description: 'Full name of the user',
-    example: 'John Doe',
+    description: 'Wallet address of the user submitting the KYC application',
+    example: '0x1234567890123456789012345678901234567890',
   })
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  walletAddress: string;
 }
