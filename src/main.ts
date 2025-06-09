@@ -4,22 +4,42 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import compression from 'compression';
+import { RedisStore } from 'connect-redis';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { createClient } from 'redis';
 
 import { env } from './config';
 import { AppModule } from './modules/app.module';
 
-const setMiddleware = (app: NestExpressApplication) => {
+const setMiddleware = async (app: NestExpressApplication) => {
   app.use(helmet());
+
+  // Initialize Redis client
+  const redisClient = createClient({
+    url: env.redis.url,
+  });
+  await redisClient.connect();
+
+  // Initialize Redis store
+  const redisStore = new RedisStore({
+    client: redisClient,
+    prefix: 'u4s:',
+  });
 
   app.use(
     session({
-      secret: 'your-secret-key',
+      store: redisStore,
+      secret: env.auth.jwt.secret,
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        secure: env.app.env === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      },
     }),
   );
 
@@ -50,7 +70,7 @@ async function bootstrap() {
   const logger = new Logger('[APP]');
 
   app.setGlobalPrefix('api');
-  setMiddleware(app);
+  await setMiddleware(app);
 
   if (process.env.NODE_ENV !== 'production') {
     const swaggerConfig = new DocumentBuilder()
@@ -68,4 +88,7 @@ async function bootstrap() {
   );
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});

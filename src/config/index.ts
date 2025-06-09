@@ -13,11 +13,14 @@ function loadConfig() {
     },
     auth: {
       jwt: {
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_SECRET || 'default-secret-key-for-development',
       },
       encryption: {
         key: process.env.ENCRYPTION_KEY,
       },
+    },
+    redis: {
+      url: process.env.REDIS_URL || 'redis://localhost:6379',
     },
     pinata: {
       pinataJwt: process.env.PINATA_JWT,
