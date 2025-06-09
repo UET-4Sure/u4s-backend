@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsEnum, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 import { DocumentType } from '../entities/kyc_profile.entity';
 
@@ -23,20 +23,28 @@ export class CreateKycApplicationDto {
   documentNumber: string;
 
   @ApiProperty({
-    description: 'URL of the front side of the document',
-    example: 'https://cdn.example.com/kyc/scan1.jpg',
+    description: 'Base64 encoded image of the front side of the document',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
   })
-  @IsUrl()
+  @IsString()
   @IsNotEmpty()
-  documentFrontImageUrl: string;
+  @Matches(/^data:image\/(jpeg|png|jpg);base64,/, {
+    message:
+      'Document front image must be a valid base64 encoded image (JPEG/PNG)',
+  })
+  documentFrontImage: string;
 
   @ApiProperty({
-    description: 'URL of the back side of the document',
-    example: 'https://cdn.example.com/kyc/scan2.jpg',
+    description: 'Base64 encoded image of the back side of the document',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
   })
-  @IsUrl()
+  @IsString()
   @IsNotEmpty()
-  documentBackImageUrl: string;
+  @Matches(/^data:image\/(jpeg|png|jpg);base64,/, {
+    message:
+      'Document back image must be a valid base64 encoded image (JPEG/PNG)',
+  })
+  documentBackImage: string;
 
   @ApiProperty({
     description: 'Wallet address of the user submitting the KYC application',

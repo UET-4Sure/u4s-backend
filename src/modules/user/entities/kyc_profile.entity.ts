@@ -1,13 +1,13 @@
 // src/modules/user/entities/kyc-profile.entity.ts
 
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  OneToOne,
+  Entity,
   JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import { User } from './user.entity';
@@ -46,12 +46,11 @@ export class KycProfile {
   @Column({ type: 'varchar', length: 100, name: 'document_number' })
   documentNumber: string;
 
-  // If you store images of documents, you might store an S3/IPFS URL or a CID.
-  @Column({ type: 'text', name: 'document_front_image_url', nullable: true })
-  documentFrontImageUrl: string | null;
+  @Column({ type: 'text', name: 'document_front_image', nullable: true })
+  documentFrontImage: string | null;
 
-  @Column({ type: 'text', name: 'document_back_image_url', nullable: true })
-  documentBackImageUrl: string | null;
+  @Column({ type: 'text', name: 'document_back_image', nullable: true })
+  documentBackImage: string | null;
 
   @Column({
     type: 'enum',

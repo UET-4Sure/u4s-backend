@@ -144,8 +144,8 @@ export class UserService {
       walletAddress: createKycApplicationDto.walletAddress,
       documentType: createKycApplicationDto.documentType,
       documentNumber: createKycApplicationDto.documentNumber,
-      documentFrontImageUrl: createKycApplicationDto.documentFrontImageUrl,
-      documentBackImageUrl: createKycApplicationDto.documentBackImageUrl,
+      documentFrontImage: createKycApplicationDto.documentFrontImage,
+      documentBackImage: createKycApplicationDto.documentBackImage,
       verificationOutcome: VerificationOutcome.APPROVED,
     });
 
@@ -183,8 +183,8 @@ export class UserService {
       status: app.verificationOutcome,
       documentType: app.documentType,
       documentNumber: app.documentNumber,
-      documentFrontImageUrl: app.documentFrontImageUrl,
-      documentBackImageUrl: app.documentBackImageUrl,
+      documentFrontImage: app.documentFrontImage,
+      documentBackImage: app.documentBackImage,
       submittedAt: app.createdAt,
       reviewedAt: app.reviewedAt,
       reviewNotes: app.reviewNotes,
@@ -228,9 +228,15 @@ export class UserService {
             status: applicationToReturn.verificationOutcome,
             documentType: applicationToReturn.documentType,
             documentNumber: applicationToReturn.documentNumber,
+<<<<<<< Updated upstream
             walletAddress: applicationToReturn.walletAddress,
             documentFrontImageUrl: applicationToReturn.documentFrontImageUrl,
             documentBackImageUrl: applicationToReturn.documentBackImageUrl,
+=======
+            documentFrontImage: applicationToReturn.documentFrontImage,
+            documentBackImage: applicationToReturn.documentBackImage,
+            fullName: applicationToReturn.fullName,
+>>>>>>> Stashed changes
             submittedAt: applicationToReturn.createdAt,
             reviewedAt: applicationToReturn.reviewedAt,
             reviewNotes: applicationToReturn.reviewNotes,

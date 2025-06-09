@@ -32,16 +32,18 @@ export class LatestApplicationDto {
   walletAddress: string;
 
   @ApiProperty({
-    example: 'https://cdn.example.com/kyc/scan1.jpg',
+    description: 'Base64 encoded image of the front side of the document',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
     nullable: true,
   })
-  documentFrontImageUrl: string | null;
+  documentFrontImage: string | null;
 
   @ApiProperty({
-    example: 'https://cdn.example.com/kyc/scan2.jpg',
+    description: 'Base64 encoded image of the back side of the document',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
     nullable: true,
   })
-  documentBackImageUrl: string | null;
+  documentBackImage: string | null;
 
   @ApiProperty({ example: '2025-06-05T14:32:00Z' })
   submittedAt: Date;

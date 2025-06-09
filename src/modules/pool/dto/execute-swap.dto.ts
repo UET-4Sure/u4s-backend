@@ -68,7 +68,8 @@ export class ExecuteSwapDto {
 
   @ApiProperty({
     description: 'Transaction hash of the swap',
-    example: '0x1234567890123456789012345678901234567890123456789012345678901234',
+    example:
+      '0x1234567890123456789012345678901234567890123456789012345678901234',
   })
   @IsNotEmpty()
   @Length(66, 66)
