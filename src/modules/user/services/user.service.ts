@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 
 import { GetManyResponse, paginateData } from 'src/common/dtos';
 import { EncryptionService } from 'src/modules/auth/services/encryption.service';
+import { sbtClient } from 'src/script/soulboundToken';
+import { uploadSBTMetadata } from 'src/services/ipfsService';
 
 import { Swap } from '../../swap/entities/swap.entity';
 import { BanUserDto } from '../dto/ban-user.dto';
@@ -23,8 +25,6 @@ import {
 } from '../entities/kyc_profile.entity';
 import { User } from '../entities/user.entity';
 import { UserBan } from '../entities/user_ban.entity';
-import { sbtClient } from 'src/script/soulboundToken';
-import { uploadSBTMetadata } from 'src/services/ipfsService';
 
 @Injectable()
 export class UserService {
@@ -141,7 +141,7 @@ export class UserService {
 
     const kycProfile = this.kycProfileRepository.create({
       user,
-      walletAddress: createKycApplicationDto.walletAddress,
+      walletAddress: walletAddress.toLowerCase(),
       documentType: createKycApplicationDto.documentType,
       documentNumber: createKycApplicationDto.documentNumber,
       documentFrontImage: createKycApplicationDto.documentFrontImage,
@@ -183,6 +183,7 @@ export class UserService {
       status: app.verificationOutcome,
       documentType: app.documentType,
       documentNumber: app.documentNumber,
+      walletAddress: app.walletAddress,
       documentFrontImage: app.documentFrontImage,
       documentBackImage: app.documentBackImage,
       submittedAt: app.createdAt,
@@ -228,15 +229,9 @@ export class UserService {
             status: applicationToReturn.verificationOutcome,
             documentType: applicationToReturn.documentType,
             documentNumber: applicationToReturn.documentNumber,
-<<<<<<< Updated upstream
             walletAddress: applicationToReturn.walletAddress,
-            documentFrontImageUrl: applicationToReturn.documentFrontImageUrl,
-            documentBackImageUrl: applicationToReturn.documentBackImageUrl,
-=======
             documentFrontImage: applicationToReturn.documentFrontImage,
             documentBackImage: applicationToReturn.documentBackImage,
-            fullName: applicationToReturn.fullName,
->>>>>>> Stashed changes
             submittedAt: applicationToReturn.createdAt,
             reviewedAt: applicationToReturn.reviewedAt,
             reviewNotes: applicationToReturn.reviewNotes,

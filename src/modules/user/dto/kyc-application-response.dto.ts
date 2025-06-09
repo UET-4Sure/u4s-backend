@@ -21,6 +21,9 @@ export class KycApplicationResponseDto {
   @ApiProperty({ example: 'A12345678' })
   documentNumber: string;
 
+  @ApiProperty({ example: '0x1234567890123456789012345678901234567890' })
+  walletAddress: string;
+
   @ApiProperty({
     description: 'Base64 encoded image of the front side of the document',
     example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',

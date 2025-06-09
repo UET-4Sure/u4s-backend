@@ -45,12 +45,4 @@ export class CreateKycApplicationDto {
       'Document back image must be a valid base64 encoded image (JPEG/PNG)',
   })
   documentBackImage: string;
-
-  @ApiProperty({
-    description: 'Wallet address of the user submitting the KYC application',
-    example: '0x1234567890123456789012345678901234567890',
-  })
-  @IsString()
-  @IsNotEmpty()
-  walletAddress: string;
 }
