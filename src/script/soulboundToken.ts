@@ -1,6 +1,7 @@
 import { BigNumberish, ethers } from 'ethers';
-import { env as config } from '../config/index';
+
 import SBT_ABI from '../abi/IDentifySBT.json';
+import { env as config } from '../config/index';
 import { uploadSBTMetadata } from '../services/ipfsService';
 
 const SBT_ADDRESS = '0xb117d1c006fC208FEAFFE5E08529BE5de8235B73';

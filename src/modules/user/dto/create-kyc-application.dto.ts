@@ -28,7 +28,7 @@ export class CreateKycApplicationDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^data:image\/(jpeg|png|jpg);base64,/, {
+  @Matches(/^data:image\/(jpeg|png|jpg);base64,[A-Za-z0-9+/=]+$/, {
     message:
       'Document front image must be a valid base64 encoded image (JPEG/PNG)',
   })
@@ -40,7 +40,7 @@ export class CreateKycApplicationDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^data:image\/(jpeg|png|jpg);base64,/, {
+  @Matches(/^data:image\/(jpeg|png|jpg);base64,[A-Za-z0-9+/=]+$/, {
     message:
       'Document back image must be a valid base64 encoded image (JPEG/PNG)',
   })

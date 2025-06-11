@@ -141,7 +141,6 @@ export class UserService {
 
     const kycProfile = this.kycProfileRepository.create({
       user,
-      walletAddress: walletAddress.toLowerCase(),
       documentType: createKycApplicationDto.documentType,
       documentNumber: createKycApplicationDto.documentNumber,
       documentFrontImage: createKycApplicationDto.documentFrontImage,
@@ -183,7 +182,7 @@ export class UserService {
       status: app.verificationOutcome,
       documentType: app.documentType,
       documentNumber: app.documentNumber,
-      walletAddress: app.walletAddress,
+      walletAddress: user.walletAddress,
       documentFrontImage: app.documentFrontImage,
       documentBackImage: app.documentBackImage,
       submittedAt: app.createdAt,
@@ -229,7 +228,7 @@ export class UserService {
             status: applicationToReturn.verificationOutcome,
             documentType: applicationToReturn.documentType,
             documentNumber: applicationToReturn.documentNumber,
-            walletAddress: applicationToReturn.walletAddress,
+            walletAddress: user.walletAddress,
             documentFrontImage: applicationToReturn.documentFrontImage,
             documentBackImage: applicationToReturn.documentBackImage,
             submittedAt: applicationToReturn.createdAt,
