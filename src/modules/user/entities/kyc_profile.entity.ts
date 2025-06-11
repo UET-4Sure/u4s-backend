@@ -43,10 +43,10 @@ export class KycProfile {
   @Column({ type: 'varchar', length: 100, name: 'document_number' })
   documentNumber: string;
 
-  @Column({ type: 'text', name: 'document_front_image', nullable: true })
+  @Column({ type: 'longtext', name: 'document_front_image', nullable: true })
   documentFrontImage: string | null;
 
-  @Column({ type: 'text', name: 'document_back_image', nullable: true })
+  @Column({ type: 'longtext', name: 'document_back_image', nullable: true })
   documentBackImage: string | null;
 
   @Column({
