@@ -24,6 +24,10 @@ import { GetPoolsDto } from './dto/get-pools.dto';
 import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
 import { OhlcData } from './interfaces/ohlc.interface';
+import {
+  GetManyPoolResponse,
+  PoolResponse,
+} from './interfaces/pool-response.interface';
 
 @Injectable()
 export class PoolService {
@@ -104,7 +108,29 @@ export class PoolService {
     return this.poolRepository.save(pool);
   }
 
-  async findAll(query: GetPoolsDto): Promise<GetManyResponse<Pool>> {
+  private async calculateVolatility(pool: Pool): Promise<boolean> {
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+    const metrics = await this.poolMetricRepository
+      .createQueryBuilder('metric')
+      .where('metric.pool = :poolId', { poolId: pool.id })
+      .andWhere('metric.timestamp >= :oneHourAgo', { oneHourAgo })
+      .orderBy('metric.timestamp', 'ASC')
+      .getMany();
+
+    if (metrics.length === 0) return false;
+
+    const prices = metrics.map((metric) => Number(metric.priceRatio));
+    const highestPrice = Math.max(...prices);
+    const lowestPrice = Math.min(...prices);
+
+    // Calculate percentage change
+    const percentageChange = ((highestPrice - lowestPrice) / lowestPrice) * 100;
+    return percentageChange > 20;
+  }
+
+  async findAll(query: GetPoolsDto): Promise<GetManyPoolResponse> {
     const {
       page = 1,
       limit = 10,
@@ -140,14 +166,22 @@ export class PoolService {
     const [pools, total] = await qb.getManyAndCount();
     const paginatedData = paginateData(pools, { limit, offset });
 
+    // Calculate volatility for each pool
+    const poolsWithVolatility = await Promise.all(
+      paginatedData.data.map(async (pool) => ({
+        ...pool,
+        highVolatility: await this.calculateVolatility(pool),
+      })),
+    );
+
     return {
-      data: paginatedData.data,
+      data: poolsWithVolatility,
       total: paginatedData.total,
       count: paginatedData.count,
     };
   }
 
-  async findOne(address: string): Promise<Pool> {
+  async findOne(address: string): Promise<PoolResponse> {
     const pool = await this.poolRepository.findOne({
       where: { address },
       relations: ['token0', 'token1', 'positions', 'swaps'],
@@ -157,7 +191,11 @@ export class PoolService {
       throw new NotFoundException(`Pool with address ${address} not found`);
     }
 
-    return pool;
+    const highVolatility = await this.calculateVolatility(pool);
+    return {
+      ...pool,
+      highVolatility,
+    };
   }
 
   async initialize(
