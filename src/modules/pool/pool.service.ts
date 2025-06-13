@@ -18,10 +18,12 @@ import { TokenPriceService } from '../token-price/token-price.service';
 
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';
+import { GetPoolOhlcDto, TimeFrame } from './dto/get-pool-ohlc.dto';
 import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
 import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
+import { OhlcData } from './interfaces/ohlc.interface';
 
 @Injectable()
 export class PoolService {
@@ -302,5 +304,160 @@ export class PoolService {
     });
 
     return swap;
+  }
+
+  async getPoolOhlc(
+    address: string,
+    query: GetPoolOhlcDto,
+  ): Promise<OhlcData[]> {
+    const pool = await this.poolRepository.findOne({
+      where: { address },
+      relations: ['token0', 'token1'],
+    });
+
+    if (!pool) {
+      throw new NotFoundException(`Pool with address ${address} not found`);
+    }
+
+    const {
+      startTime,
+      endTime,
+      timeFrame = TimeFrame.HOUR,
+      limit = 100,
+    } = query;
+
+    // Get pool metrics within the time range
+    const metrics = await this.poolMetricRepository
+      .createQueryBuilder('metric')
+      .leftJoinAndSelect('metric.pool', 'pool')
+      .where('pool.address = :address', { address })
+      .andWhere('metric.timestamp BETWEEN :startTime AND :endTime', {
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+      })
+      .orderBy('metric.timestamp', 'DESC')
+      .limit(limit * 10) // Get more data than needed to ensure we have enough after grouping
+      .getMany();
+
+    // Get the last known price ratio before the start time
+    const lastKnownMetric = await this.poolMetricRepository
+      .createQueryBuilder('metric')
+      .leftJoinAndSelect('metric.pool', 'pool')
+      .where('pool.address = :address', { address })
+      .andWhere('metric.timestamp < :startTime', {
+        startTime: new Date(startTime),
+      })
+      .orderBy('metric.timestamp', 'DESC')
+      .getOne();
+
+    // Group metrics by time frame
+    const groupedMetrics = this.groupMetricsByTimeFrame(metrics, timeFrame);
+
+    // Calculate OHLC data for each time frame, using last known price for periods with no data
+    const ohlcData = this.calculateOhlcData(
+      groupedMetrics,
+      lastKnownMetric?.priceRatio,
+    );
+
+    // Return only the most recent data points up to the limit
+    return ohlcData.slice(0, limit);
+  }
+
+  private calculateOhlcData(
+    groupedMetrics: Map<string, PoolMetrics[]>,
+    lastKnownPrice?: string,
+  ): OhlcData[] {
+    const ohlcData: OhlcData[] = [];
+    let lastPrice = lastKnownPrice ? Number(lastKnownPrice) : 0;
+    let lastTimestamp: string | null = null;
+
+    // Sort timestamps to process them in order
+    const timestamps = Array.from(groupedMetrics.keys()).sort();
+
+    timestamps.forEach((timestamp) => {
+      const metrics = groupedMetrics.get(timestamp) || [];
+
+      if (metrics.length === 0) {
+        // Skip periods with no data if we don't have a last known price
+        if (lastPrice === 0) return;
+
+        // Only add a data point if there's a gap in the data
+        if (lastTimestamp) {
+          const timeDiff = this.getTimeDifference(lastTimestamp, timestamp);
+          if (timeDiff > 1) {
+            ohlcData.push({
+              timestamp: new Date(timestamp),
+              open: lastPrice.toString(),
+              high: lastPrice.toString(),
+              low: lastPrice.toString(),
+              close: lastPrice.toString(),
+              volume: '0',
+            });
+          }
+        }
+        return;
+      }
+
+      const prices = metrics.map((metric) => Number(metric.priceRatio));
+      lastPrice = prices[prices.length - 1]; // Update last known price
+      lastTimestamp = timestamp;
+
+      ohlcData.push({
+        timestamp: new Date(timestamp),
+        open: prices[0].toString(),
+        high: Math.max(...prices).toString(),
+        low: Math.min(...prices).toString(),
+        close: prices[prices.length - 1].toString(),
+        volume: metrics
+          .reduce((sum, metric) => sum + Number(metric.volumeUsd), 0)
+          .toString(),
+      });
+    });
+
+    return ohlcData;
+  }
+
+  private getTimeDifference(timestamp1: string, timestamp2: string): number {
+    const date1 = new Date(timestamp1);
+    const date2 = new Date(timestamp2);
+    return Math.abs(date2.getTime() - date1.getTime()) / (1000 * 60 * 60); // Difference in hours
+  }
+
+  private groupMetricsByTimeFrame(
+    metrics: PoolMetrics[],
+    timeFrame: TimeFrame,
+  ): Map<string, PoolMetrics[]> {
+    const grouped = new Map<string, PoolMetrics[]>();
+
+    metrics.forEach((metric) => {
+      const timestamp = new Date(metric.timestamp);
+      let key: string;
+
+      switch (timeFrame) {
+        case TimeFrame.MINUTE:
+          key = timestamp.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+          break;
+        case TimeFrame.HOUR:
+          key = timestamp.toISOString().slice(0, 13); // YYYY-MM-DDTHH
+          break;
+        case TimeFrame.DAY:
+          key = timestamp.toISOString().slice(0, 10); // YYYY-MM-DD
+          break;
+        case TimeFrame.WEEK: {
+          // Get the start of the week (Sunday)
+          const weekStart = new Date(timestamp);
+          weekStart.setDate(timestamp.getDate() - timestamp.getDay());
+          key = weekStart.toISOString().slice(0, 10);
+          break;
+        }
+      }
+
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key)!.push(metric);
+    });
+
+    return grouped;
   }
 }

@@ -17,10 +17,12 @@ import { Swap } from '../swap/entities/swap.entity';
 
 import { CreatePoolDto } from './dto/create-pool.dto';
 import { ExecuteSwapDto } from './dto/execute-swap.dto';
+import { GetPoolOhlcDto } from './dto/get-pool-ohlc.dto';
 import { GetPoolSwapsDto } from './dto/get-pool-swaps.dto';
 import { GetPoolsDto } from './dto/get-pools.dto';
 import { InitializePoolDto } from './dto/initialize-pool.dto';
 import { Pool } from './entities/pool.entity';
+import { OhlcData } from './interfaces/ohlc.interface';
 import { PoolService } from './pool.service';
 
 @ApiTags('pools')
@@ -148,5 +150,38 @@ export class PoolController {
     @Body() executeSwapDto: ExecuteSwapDto,
   ): Promise<Swap> {
     return this.poolService.executeSwap(address, executeSwapDto);
+  }
+
+  @Get(':address/ohlc')
+  @ApiOperation({
+    summary: 'Get OHLC (Open, High, Low, Close) data for a pool',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return OHLC data for the specified time range',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          timestamp: { type: 'string', format: 'date-time' },
+          open: { type: 'string' },
+          high: { type: 'string' },
+          low: { type: 'string' },
+          close: { type: 'string' },
+          volume: { type: 'string' },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pool not found',
+  })
+  getPoolOhlc(
+    @Param('address') address: string,
+    @Query() query: GetPoolOhlcDto,
+  ): Promise<OhlcData[]> {
+    return this.poolService.getPoolOhlc(address, query);
   }
 }
