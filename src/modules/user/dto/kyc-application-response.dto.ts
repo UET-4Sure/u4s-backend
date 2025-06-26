@@ -49,4 +49,11 @@ export class KycApplicationResponseDto {
     nullable: true,
   })
   reviewNotes: string | null;
+
+  @ApiProperty({
+    example: '1',
+    description: 'SBT token ID associated with the KYC application',
+    nullable: true,
+  })
+  tokenId: string | null;
 }

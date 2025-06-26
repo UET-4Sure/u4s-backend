@@ -134,7 +134,7 @@ export class UserService {
 
     // mint sbt for the user
     const tokenURI = await uploadSBTMetadata();
-    await sbtClient.mint({
+    const { tokenId } = await sbtClient.mint({
       to: walletAddress,
       tokenURI,
     });
@@ -146,6 +146,7 @@ export class UserService {
       documentFrontImage: createKycApplicationDto.documentFrontImage,
       documentBackImage: createKycApplicationDto.documentBackImage,
       verificationOutcome: VerificationOutcome.APPROVED,
+      tokenId,
     });
 
     return this.kycProfileRepository.save(kycProfile);
@@ -188,6 +189,7 @@ export class UserService {
       submittedAt: app.createdAt,
       reviewedAt: app.reviewedAt,
       reviewNotes: app.reviewNotes,
+      tokenId: app.tokenId,
     }));
   }
 
@@ -234,6 +236,7 @@ export class UserService {
             submittedAt: applicationToReturn.createdAt,
             reviewedAt: applicationToReturn.reviewedAt,
             reviewNotes: applicationToReturn.reviewNotes,
+            tokenId: applicationToReturn.tokenId,
           }
         : null,
     };
