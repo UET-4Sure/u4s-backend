@@ -53,6 +53,13 @@ export class LatestApplicationDto {
 
   @ApiProperty({ example: 'Document image is unclear', nullable: true })
   reviewNotes: string | null;
+
+  @ApiProperty({
+    example: '1234567890',
+    description: 'SBT token ID associated with the KYC application',
+    nullable: true,
+  })
+  tokenId: string | null;
 }
 
 export class KycStatusResponseDto {

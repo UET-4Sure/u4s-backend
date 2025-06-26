@@ -63,6 +63,9 @@ export class KycProfile {
   @Column({ type: 'timestamp', name: 'reviewed_at', nullable: true })
   reviewedAt: Date | null;
 
+  @Column({ type: 'varchar', length: 255, name: 'token_id', nullable: true })
+  tokenId: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
