@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
 import {
   ForbiddenException,
   Injectable,
@@ -20,10 +18,6 @@ import { OAuthService } from './services/oauth.service';
 
 @Injectable()
 export class AuthService {
-  private nonceMap: Map<string, { nonce: string; timestamp: number }> =
-    new Map();
-  private readonly NONCE_EXPIRY = 5 * 60 * 1000; // 5 minutes
-
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -32,35 +26,20 @@ export class AuthService {
     private encryptionService: EncryptionService,
   ) {}
 
-  async generateNonce(address: string): Promise<string> {
-    const nonce = randomBytes(32).toString('hex');
-    this.nonceMap.set(address.toLowerCase(), {
-      nonce,
-      timestamp: Date.now(),
-    });
-    return nonce;
-  }
-
-  private verifyNonce(address: string, nonce: string): boolean {
-    const stored = this.nonceMap.get(address.toLowerCase());
-    if (!stored) return false;
-
-    const isExpired = Date.now() - stored.timestamp > this.NONCE_EXPIRY;
-    if (isExpired) {
-      this.nonceMap.delete(address.toLowerCase());
-      return false;
-    }
-
-    return stored.nonce === nonce;
-  }
-
   private verifySignature(
     address: string,
     signature: string,
-    nonce: string,
+    domain: any,
+    types: any,
+    message: any,
   ): boolean {
     try {
-      const recoveredAddress = ethers.utils.verifyMessage(nonce, signature);
+      const recoveredAddress = ethers.utils.verifyTypedData(
+        domain,
+        types,
+        message,
+        signature,
+      );
       return recoveredAddress.toLowerCase() === address.toLowerCase();
     } catch (error) {
       return false;
@@ -68,15 +47,20 @@ export class AuthService {
   }
 
   async walletLogin(dto: WalletLoginDto) {
-    const { address, signature, nonce } = dto;
+    const { address, signature, domain, types, message } = dto;
 
-    // Verify nonce
-    if (!this.verifyNonce(address, nonce)) {
-      throw new UnauthorizedException('Invalid or expired nonce');
+    // Validate that the wallet address in the message matches the claimed address
+    if (
+      message.wallet &&
+      message.wallet.toLowerCase() !== address.toLowerCase()
+    ) {
+      throw new UnauthorizedException(
+        'Wallet address in message does not match claimed address',
+      );
     }
 
     // Verify signature
-    if (!this.verifySignature(address, signature, nonce)) {
+    if (!this.verifySignature(address, signature, domain, types, message)) {
       throw new UnauthorizedException('Invalid signature');
     }
 
@@ -106,9 +90,6 @@ export class AuthService {
       sub: user.id,
       walletAddress: user.walletAddress,
     });
-
-    // Clean up used nonce
-    this.nonceMap.delete(address.toLowerCase());
 
     return {
       token,

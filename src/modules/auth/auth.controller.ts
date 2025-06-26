@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
@@ -17,33 +10,10 @@ import { WalletLoginDto } from './dto/wallet-login.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get('nonce')
-  @ApiOperation({ summary: 'Get nonce for wallet login' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns a nonce for the given wallet address',
-    schema: {
-      type: 'object',
-      properties: {
-        nonce: {
-          type: 'string',
-          example: 'random-nonce-string',
-        },
-      },
-    },
-  })
-  async getNonce(@Query('address') address: string) {
-    if (!address) {
-      throw new UnauthorizedException('Address is required');
-    }
-    const nonce = await this.authService.generateNonce(address);
-    return { nonce };
-  }
-
   @Post('wallet-login')
-  @ApiOperation({ summary: 'Login with wallet signature' })
+  @ApiOperation({ summary: 'Login with EIP-712 wallet signature' })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Login successful',
     schema: {
       type: 'object',
@@ -65,7 +35,7 @@ export class AuthController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Invalid signature or nonce' })
+  @ApiResponse({ status: 401, description: 'Invalid EIP-712 signature' })
   @ApiResponse({ status: 403, description: 'User is banned' })
   async walletLogin(@Body() dto: WalletLoginDto) {
     return this.authService.walletLogin(dto);
@@ -74,7 +44,7 @@ export class AuthController {
   @Post('oauth-login')
   @ApiOperation({ summary: 'Login with OAuth provider' })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Login successful',
     schema: {
       type: 'object',
