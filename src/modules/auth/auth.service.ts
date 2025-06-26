@@ -60,7 +60,7 @@ export class AuthService {
     nonce: string,
   ): boolean {
     try {
-      const recoveredAddress = ethers.verifyMessage(nonce, signature);
+      const recoveredAddress = ethers.utils.verifyMessage(nonce, signature);
       return recoveredAddress.toLowerCase() === address.toLowerCase();
     } catch (error) {
       return false;

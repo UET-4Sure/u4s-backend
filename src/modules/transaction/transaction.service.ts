@@ -46,7 +46,7 @@ export class TransactionService {
     dto: SignTransactionDto,
   ): Promise<{ signature: string }> {
     // Validate transaction data format
-    if (!ethers.isHexString(dto.transactionData)) {
+    if (!ethers.utils.isHexString(dto.transactionData)) {
       throw new BadRequestException('Invalid transaction data format');
     }
 
