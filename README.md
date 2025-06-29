@@ -1,98 +1,289 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# U4S Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A comprehensive DeFi backend API built with NestJS that provides liquidity pool management, swap execution, KYC verification, and analytics for decentralized trading platforms.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+### Core DeFi Functionality
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Liquidity Pool Management**: Create, manage, and monitor liquidity pools with multiple token pairs
+- **Swap Execution**: Execute token swaps with real-time price calculations and slippage protection
+- **Position Management**: Handle liquidity positions with tick-based range orders
+- **Pool Metrics & Analytics**: Track volume, TVL, APR, and other key performance indicators
+- **OHLC Price Data**: Generate candlestick data for trading charts
 
-## Project setup
+### Authentication & User Management
+
+- **Multi-Auth Support**: Wallet signature authentication, Google OAuth, and Facebook OAuth
+- **KYC Verification**: Complete KYC flow with document upload and SBT (Soulbound Token) minting
+- **User Ban System**: Administrative user management with ban/unban functionality
+- **Private Key Management**: Secure encrypted private key storage for OAuth users
+
+### Blockchain Integration
+
+- **Ethereum Integration**: Full Web3 integration with Ethers.js
+- **Token Price Feeds**: Real-time token price tracking and historical data
+- **IPFS Integration**: Decentralized metadata storage for SBT tokens
+- **Transaction Tracking**: Monitor and record all DeFi transactions
+
+### Security & Performance
+
+- **JWT Authentication**: Secure token-based authentication
+- **Rate Limiting**: API rate limiting and request throttling
+- **Session Management**: Redis-based session storage
+- **Data Validation**: Comprehensive input validation and sanitization
+- **Database Migrations**: Version-controlled database schema management
+
+## Tech Stack
+
+- **Framework**: NestJS (Node.js)
+- **Database**: MySQL with TypeORM
+- **Caching**: Redis
+- **Authentication**: JWT, OAuth (Google/Facebook)
+- **Blockchain**: Ethers.js, Web3 integration
+- **File Storage**: IPFS (Pinata)
+- **API Documentation**: Swagger/OpenAPI
+- **Package Manager**: PNPM
+
+## Prerequisites
+
+- Node.js >= 20.11.1
+- npm >= 10.1.0
+- MySQL database
+- Redis server
+- PNPM package manager
+
+## Quick Start
+
+### 1. Installation
 
 ```bash
-$ npm install
+# Clone the repository
+git clone <repository-url>
+cd u4s-backend
+
+# Install dependencies
+pnpm install
 ```
 
-## Compile and run the project
+### 2. Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```env
+# Application
+NODE_ENV=development
+PORT=3000
+
+# Database
+DATABASE_URL=mysql://username:password@localhost:3306/u4s
+
+# Authentication
+JWT_SECRET=your-super-secret-jwt-key
+ENCRYPTION_KEY=your-64-character-hex-encryption-key
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Blockchain
+RPC_URL=https://your-ethereum-rpc-url
+PRIVATE_KEY=your-ethereum-private-key
+
+# IPFS
+PINATA_JWT=your-pinata-jwt-token
+
+# OAuth (Optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+FACEBOOK_APP_ID=your-facebook-app-id
+FACEBOOK_APP_SECRET=your-facebook-app-secret
+```
+
+### 3. Database Setup
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Run database migrations
+pnpm run migration:up
 ```
 
-## Run tests
+### 4. Start the Application
 
 ```bash
-# unit tests
-$ npm run test
+# Development mode with hot reload
+pnpm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Production mode
+pnpm run build
+pnpm run start:prod
 ```
+
+The API will be available at `http://localhost:3000/api`
+
+## API Documentation
+
+### Swagger Documentation
+
+Visit `http://localhost:3000/swagger` for interactive API documentation.
+
+### Main Endpoints
+
+#### Authentication
+
+- `POST /api/auth/wallet-login` - Wallet signature authentication
+- `POST /api/auth/oauth-login` - OAuth authentication (Google/Facebook)
+
+#### Pool Management
+
+- `GET /api/pools` - List all liquidity pools
+- `POST /api/pools` - Create a new pool
+- `GET /api/pools/:address` - Get pool details
+- `POST /api/pools/:address/swaps` - Execute a swap
+- `GET /api/pools/:address/swaps` - Get pool swap history
+- `GET /api/pools/:address/ohlc` - Get OHLC price data
+
+#### Position Management
+
+- `POST /api/positions` - Create a new liquidity position
+- `GET /api/positions/:id` - Get position details
+- `POST /api/positions/:id/events` - Add liquidity event
+
+#### User & KYC
+
+- `GET /api/users/:walletAddress` - Get user profile
+- `POST /api/users/:walletAddress/kyc` - Submit KYC application
+- `GET /api/users/:walletAddress/kyc/status` - Get KYC status
+- `GET /api/users/:walletAddress/swaps` - Get user swap history
+
+#### Token Management
+
+- `GET /api/tokens` - List all tokens
+- `POST /api/tokens` - Add new token
+- `GET /api/tokens/:address/price` - Get token price
+
+## Database Schema
+
+The application uses MySQL with the following main entities:
+
+- **Users**: User accounts with wallet addresses and auth methods
+- **Pools**: Liquidity pools with token pairs and fee tiers
+- **Positions**: User liquidity positions with tick ranges
+- **Swaps**: Token swap transactions
+- **KycProfiles**: KYC verification data
+- **Tokens**: Token metadata and addresses
+- **PoolMetrics**: Pool analytics and metrics
+
+## Development
+
+### Available Scripts
+
+```bash
+# Development
+pnpm run start:dev          # Start with hot reload
+pnpm run start:debug        # Start with debug mode
+
+# Building
+pnpm run build              # Build the application
+pnpm run start:prod         # Start production build
+
+# Testing
+pnpm run test               # Run unit tests
+pnpm run test:e2e           # Run end-to-end tests
+pnpm run test:cov           # Run tests with coverage
+
+# Database
+pnpm run migration:generate # Generate new migration
+pnpm run migration:up       # Run migrations
+pnpm run migration:down     # Revert migrations
+
+# Code Quality
+pnpm run lint               # Run ESLint
+pnpm run format             # Format code with Prettier
+```
+
+### Project Structure
+
+```
+src/
+├── common/                 # Shared utilities and DTOs
+├── config/                 # Application configuration
+├── interfaces/             # TypeScript interfaces
+├── libs/                   # Library configurations
+├── migrations/             # Database migrations
+├── modules/
+│   ├── auth/              # Authentication module
+│   ├── pool/              # Pool management
+│   ├── position/          # Position management
+│   ├── swap/              # Swap functionality
+│   ├── token/             # Token management
+│   ├── token-price/       # Price tracking
+│   ├── user/              # User & KYC management
+│   └── pool-metrics/      # Analytics & metrics
+├── script/                # Blockchain scripts
+└── services/              # External services (IPFS, etc.)
+```
+
+## Security Considerations
+
+- **Private Key Encryption**: All private keys are encrypted using AES-256-GCM
+- **Input Validation**: Comprehensive validation using class-validator
+- **Rate Limiting**: API endpoints are rate-limited to prevent abuse
+- **Secure Headers**: Helmet.js for security headers
+- **CORS Configuration**: Properly configured CORS policies
+- **Session Security**: Secure cookie configuration with Redis storage
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Docker Deployment
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Build Docker image
+docker build -t u4s-backend .
+
+# Run with docker-compose
+docker-compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Environment Variables for Production
 
-## Resources
+Ensure all environment variables are properly set:
 
-Check out a few resources that may come in handy when working with NestJS:
+- Use strong, unique secrets for JWT and encryption
+- Configure secure database connections
+- Set up proper Redis clustering for high availability
+- Use production-grade RPC endpoints
+- Configure proper CORS origins
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Database Migration in Production
 
-## Support
+```bash
+# Run migrations safely
+pnpm run migration:up
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Contributing
 
-## Stay in touch
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Development Guidelines
+
+- Follow the existing code style and patterns
+- Write comprehensive tests for new features
+- Update documentation for API changes
+- Use TypeScript strictly with proper typing
+- Follow NestJS best practices and conventions
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support and questions:
+
+- Create an issue in the GitHub repository
+- Check the API documentation at `/swagger`
+- Review the existing issues and discussions
