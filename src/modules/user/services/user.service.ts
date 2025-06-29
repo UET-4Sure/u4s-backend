@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -119,7 +120,6 @@ export class UserService {
   ): Promise<KycProfile> {
     const user = await this.userRepository.findOne({
       where: { walletAddress: walletAddress.toLowerCase() },
-      relations: ['kycProfile'],
     });
 
     if (!user) {
@@ -128,8 +128,39 @@ export class UserService {
       );
     }
 
-    if (user.kycProfile) {
-      throw new Error('User already has a KYC application');
+    // Check if user already has any KYC applications
+    const existingApplications = await this.kycProfileRepository.find({
+      where: { user: { id: user.id } },
+    });
+
+    if (existingApplications.length > 0) {
+      // Check if user has an approved application
+      const approvedApplication = existingApplications.find(
+        (app) => app.verificationOutcome === VerificationOutcome.APPROVED,
+      );
+
+      if (approvedApplication) {
+        throw new ForbiddenException(
+          'User already has an approved KYC application. Cannot submit another application.',
+        );
+      }
+
+      // Check if user has a pending application
+      const pendingApplication = existingApplications.find(
+        (app) => app.verificationOutcome === VerificationOutcome.PENDING,
+      );
+
+      if (pendingApplication) {
+        throw new ForbiddenException(
+          'User already has a pending KYC application. Please wait for the current application to be reviewed.',
+        );
+      }
+
+      // If user has only rejected applications, allow them to submit a new one
+      // You might want to add additional logic here, such as:
+      // - Limiting the number of rejected applications
+      // - Requiring a cooldown period between applications
+      // - Requiring different documentation for resubmission
     }
 
     // mint sbt for the user
@@ -145,7 +176,7 @@ export class UserService {
       documentNumber: createKycApplicationDto.documentNumber,
       documentFrontImage: createKycApplicationDto.documentFrontImage,
       documentBackImage: createKycApplicationDto.documentBackImage,
-      verificationOutcome: VerificationOutcome.APPROVED,
+      verificationOutcome: VerificationOutcome.PENDING,
       tokenId,
     });
 
